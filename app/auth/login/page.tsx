@@ -70,7 +70,7 @@ const {data:profile,error:profileError}=await supabase
 .from("profiles")
 .select("role")
 .eq("id",data.user.id)
-.single();
+.maybeSingle();
 
 
 if(profileError){
