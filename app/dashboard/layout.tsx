@@ -35,12 +35,10 @@ background:"#F8FAFC"
 <div
 
 style={{
-
-flex:1,
-display:"flex",
-flexDirection:"column",
-marginLeft:270
-
+  flex:1,
+  display:"flex",
+  flexDirection:"column",
+  marginLeft:0
 }}
 
 >
