@@ -10,6 +10,7 @@ const [search,setSearch]=useState("");
 const [results,setResults]=useState<any[]>([]);
 
 
+
 async function runSearch(){
 
 
@@ -27,24 +28,29 @@ let data:any[]=[];
 
 
 
-// CLIENTS
+// CLIENTS + ZIP + SALESMAN ID
 
-const {data:clients,error:clientError}=await supabase
+const {data:clients}=await supabase
+
 .from("clients")
-.select("*")
+
+.select(`
+*,
+salesmen(
+name
+)
+`)
+
 .or(
-`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%,address.ilike.%${search}%`
+`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%,address.ilike.%${search}%,zip.ilike.%${search}%`
 );
-
-
-console.log("CLIENT RESULTS",clients);
-console.log("CLIENT ERROR",clientError);
 
 
 
 if(clients){
 
 data.push(
+
 ...clients.map((x:any)=>({
 
 type:"Client",
@@ -52,9 +58,16 @@ type:"Client",
 name:x.name,
 
 info:
-`${x.phone || ""} ${x.email || ""} ${x.address || ""}`
+`
+Phone: ${x.phone || ""}
+Email: ${x.email || ""}
+Address: ${x.address || ""}
+Zip: ${x.zip || ""}
+Salesman: ${x.salesmen?.name || ""}
+`
 
 }))
+
 );
 
 }
@@ -64,22 +77,22 @@ info:
 
 // SALESMEN
 
-const {data:salesmen,error:salesError}=await supabase
+const {data:salesmen}=await supabase
+
 .from("salesmen")
+
 .select("*")
+
 .or(
 `name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`
 );
-
-
-console.log("SALESMAN RESULTS",salesmen);
-console.log("SALESMAN ERROR",salesError);
 
 
 
 if(salesmen){
 
 data.push(
+
 ...salesmen.map((x:any)=>({
 
 type:"Salesman",
@@ -87,9 +100,14 @@ type:"Salesman",
 name:x.name,
 
 info:
-`${x.phone || ""} ${x.email || ""}`
+`
+Phone: ${x.phone || ""}
+Email: ${x.email || ""}
+Commission: ${x.commission_percent || ""}%
+`
 
 }))
+
 );
 
 }
@@ -99,32 +117,53 @@ info:
 
 // JOBS
 
-const {data:jobs,error:jobError}=await supabase
+const {data:jobs}=await supabase
+
 .from("jobs")
-.select("*")
+
+.select(`
+*,
+clients(
+name,
+phone,
+address
+),
+salesmen(
+name
+)
+`)
+
 .or(
 `status.ilike.%${search}%,notes.ilike.%${search}%`
 );
-
-
-console.log("JOB RESULTS",jobs);
-console.log("JOB ERROR",jobError);
 
 
 
 if(jobs){
 
 data.push(
-...jobs.map((x:any)=>({
+
+...jobs.map((x:any)=>(
+
+{
 
 type:"Job",
 
-name:"Job",
+name:x.clients?.name || "Job",
 
 info:
-`${x.status || ""} ${x.notes || ""}`
+`
+Status: ${x.status || ""}
+Client Phone: ${x.clients?.phone || ""}
+Address: ${x.clients?.address || ""}
+Salesman: ${x.salesmen?.name || ""}
+Notes: ${x.notes || ""}
+`
 
-}))
+}
+
+))
+
 );
 
 }
@@ -132,7 +171,6 @@ info:
 
 
 setResults(data);
-
 
 
 }
@@ -170,7 +208,7 @@ if(e.key==="Enter") runSearch();
 
 }}
 
-placeholder="Search client, phone, zip, salesman, job..."
+placeholder="Search name, phone, zip, salesman, job..."
 
 style={{
 
@@ -189,6 +227,7 @@ fontSize:16
 />
 
 
+
 <button
 
 onClick={runSearch}
@@ -205,9 +244,7 @@ border:"none",
 
 borderRadius:10,
 
-fontWeight:700,
-
-cursor:"pointer"
+fontWeight:700
 
 }}
 
@@ -219,20 +256,12 @@ Search
 
 
 
-
-<div
-
-style={{
-
-marginTop:30
-
-}}
-
->
+<div style={{marginTop:30}}>
 
 
 {
 results.map((r,i)=>(
+
 
 <div
 
@@ -255,26 +284,17 @@ border:"1px solid #ddd"
 >
 
 
-<b>
-
-{r.type}
-
-</b>
+<b>{r.type}</b>
 
 
-<h3>
-
-{r.name}
-
-</h3>
+<h3>{r.name}</h3>
 
 
-<p>
+<p style={{whiteSpace:"pre-line"}}>
 
 {r.info}
 
 </p>
-
 
 
 </div>
@@ -285,14 +305,12 @@ border:"1px solid #ddd"
 }
 
 
-
 </div>
 
 
-
 </div>
-
 
 )
+
 
 }
