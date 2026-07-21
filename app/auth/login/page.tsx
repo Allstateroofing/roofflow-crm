@@ -66,11 +66,11 @@ return;
 
 
 
-const {data:profile,error:profileError}=await supabase
+const {data:profiles,error:profileError}=await supabase
 .from("profiles")
 .select("role")
 .eq("id",data.user.id)
-.maybeSingle();
+.limit(1);
 
 
 if(profileError){
@@ -81,14 +81,24 @@ return;
 }
 
 
+const profile = profiles?.[0];
+
+
+if(!profile){
+
+alert("Profile not found for this user");
+return;
+
+}
+
+
+
 if(
 profile.role === "admin" ||
 profile.role === "secretary" ||
 profile.role === "salesman" ||
 profile.role === "worker"
 ){
-
-alert("Login successful");
 
 router.push("/dashboard");
 
