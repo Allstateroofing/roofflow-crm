@@ -1,185 +1,300 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import {useState} from "react";
+import {supabase} from "@/lib/supabase";
 
-export default function SearchPage() {
 
-const [q,setQ]=useState("");
+export default function SearchPage(){
 
-const [clients,setClients]=useState<any[]>([]);
-const [jobs,setJobs]=useState<any[]>([]);
-const [estimates,setEstimates]=useState<any[]>([]);
 
-useEffect(()=>{
+const [search,setSearch]=useState("");
 
-if(q.length<2){
+const [results,setResults]=useState<any[]>([]);
 
-setClients([]);
-setJobs([]);
-setEstimates([]);
+
+async function runSearch(){
+
+
+if(!search){
+
+setResults([]);
+
 return;
 
 }
 
-search();
 
-},[q]);
 
-async function search(){
+const text=search.toLowerCase();
 
-const term=`%${q}%`;
 
-const {data:clientsData}=await supabase
+
+const {data:clients}=await supabase
+
 .from("clients")
-.select("*")
-.or(`
-name.ilike.${term},
-phone.ilike.${term},
-email.ilike.${term},
-address.ilike.${term},
-city.ilike.${term},
-state.ilike.${term},
-zip.ilike.${term},
-salesman_name.ilike.${term}
+
+.select(`
+*,
+salesmen(name)
 `);
 
-setClients(clientsData || []);
 
-const {data:jobsData}=await supabase
+
+const {data:jobs}=await supabase
+
 .from("jobs")
-.select("*")
-.or(`
-status.ilike.${term},
-notes.ilike.${term},
-address.ilike.${term}
+
+.select(`
+*,
+clients(name,phone,address,email),
+salesmen(name)
 `);
 
-setJobs(jobsData || []);
 
-const {data:estimatesData}=await supabase
-.from("estimates")
-.select("*")
-.or(`
-title.ilike.${term},
-status.ilike.${term}
-`);
 
-setEstimates(estimatesData || []);
+
+let found:any[]=[];
+
+
+
+clients?.forEach((c:any)=>{
+
+
+const value=`
+
+${c.name}
+${c.phone}
+${c.email}
+${c.address}
+${c.salesmen?.name}
+
+`.toLowerCase();
+
+
+
+if(value.includes(text)){
+
+
+found.push({
+
+type:"Client",
+
+name:c.name,
+
+info:c.phone+" "+c.address
+
+});
+
 
 }
 
+
+});
+
+
+
+
+
+jobs?.forEach((j:any)=>{
+
+
+const value=`
+
+${j.notes}
+${j.status}
+${j.clients?.name}
+${j.clients?.phone}
+${j.clients?.address}
+${j.salesmen?.name}
+
+`.toLowerCase();
+
+
+
+if(value.includes(text)){
+
+
+found.push({
+
+type:"Job",
+
+name:j.clients?.name,
+
+info:
+j.status+
+" | "+
+j.salesmen?.name
+
+});
+
+
+}
+
+
+});
+
+
+
+setResults(found);
+
+
+}
+
+
+
+
 return(
+
 
 <div>
 
-<h1>Global Search</h1>
+
+<h1
+style={{
+fontSize:28,
+fontWeight:800,
+marginBottom:20
+}}
+>
+
+Global Search
+
+</h1>
+
+
+
+<div
+style={{
+display:"flex",
+gap:10
+}}
+>
+
 
 <input
 
-value={q}
+placeholder="Search name, phone, zip, salesman, job..."
 
-onChange={(e)=>setQ(e.target.value)}
+value={search}
 
-placeholder="Search client, phone, zip, salesman..."
+onChange={(e)=>setSearch(e.target.value)}
 
 style={{
-width:"100%",
+
 padding:15,
-fontSize:18,
-borderRadius:10,
-border:"1px solid #ddd"
+
+width:"100%",
+
+border:"1px solid #ddd",
+
+borderRadius:10
+
 }}
 
 />
 
-<br/><br/>
 
-<h2>Clients ({clients.length})</h2>
+<button
 
-{
-clients.map(c=>
+onClick={runSearch}
 
-<div
-key={c.id}
 style={{
-padding:15,
-border:"1px solid #ddd",
-marginBottom:10
+
+background:"#D4AF37",
+
+padding:"0 25px",
+
+borderRadius:10,
+
+fontWeight:700
+
 }}
+
 >
 
-<b>{c.name}</b>
+Search
 
-<br/>
+</button>
 
-{c.phone}
-
-<br/>
-
-{c.address}
-
-<br/>
-
-ZIP: {c.zip}
 
 </div>
 
-)
-}
 
-<h2>Jobs ({jobs.length})</h2>
 
-{
-jobs.map(j=>
 
 <div
-key={j.id}
+
 style={{
-padding:15,
-border:"1px solid #ddd",
-marginBottom:10
+
+marginTop:30
+
 }}
+
 >
 
-<b>{j.status}</b>
-
-<br/>
-
-{j.notes}
-
-</div>
-
-)
-}
-
-<h2>Estimates ({estimates.length})</h2>
 
 {
-estimates.map(e=>
+results.map((r,i)=>(
+
 
 <div
-key={e.id}
+
+key={i}
+
 style={{
-padding:15,
-border:"1px solid #ddd",
-marginBottom:10
+
+background:"#fff",
+
+padding:20,
+
+marginBottom:10,
+
+borderRadius:12,
+
+border:"1px solid #eee"
+
 }}
+
 >
 
-<b>{e.title}</b>
 
-<br/>
+<b>
 
-${e.total}
+{r.type}
+
+</b>
+
+
+<h3>
+
+{r.name}
+
+</h3>
+
+
+<p>
+
+{r.info}
+
+</p>
+
 
 </div>
 
-)
+
+))
+
 }
 
+
+
 </div>
 
-);
+
+</div>
+
+
+)
+
 
 }
