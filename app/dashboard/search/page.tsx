@@ -30,13 +30,13 @@ let data:any[]=[];
 
 // CLIENTS + ZIP + SALESMAN ID
 
-const {data:clients}=await supabase
+const {data:clients,error:clientError}=await supabase
 
 .from("clients")
 
 .select(`
 *,
-salesmen(
+salesmen:salesman_id(
 name
 )
 `)
@@ -46,12 +46,37 @@ name
 );
 
 
+console.log("CLIENTS:",clients);
+console.log("CLIENT ERROR:",clientError);
+
+
 
 if(clients){
 
+const filteredClients = clients.filter((x:any)=>{
+
+return (
+
+x.name?.toLowerCase().includes(search.toLowerCase()) ||
+
+x.phone?.includes(search) ||
+
+x.email?.toLowerCase().includes(search.toLowerCase()) ||
+
+x.address?.toLowerCase().includes(search.toLowerCase()) ||
+
+x.zip?.includes(search) ||
+
+x.salesmen?.name?.toLowerCase().includes(search.toLowerCase())
+
+);
+
+});
+
+
 data.push(
 
-...clients.map((x:any)=>({
+...filteredClients.map((x:any)=>({
 
 type:"Client",
 
@@ -63,7 +88,7 @@ Phone: ${x.phone || ""}
 Email: ${x.email || ""}
 Address: ${x.address || ""}
 Zip: ${x.zip || ""}
-Salesman: ${x.salesmen?.name || ""}
+Salesman: ${x.salesmen?.name || x.salesmen?.[0]?.name || ""}
 `
 
 }))
