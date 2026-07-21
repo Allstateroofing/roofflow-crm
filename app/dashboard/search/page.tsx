@@ -1,21 +1,19 @@
 "use client";
 
-import {useState} from "react";
-import {supabase} from "@/lib/supabase";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 
 export default function SearchPage(){
 
-
 const [search,setSearch]=useState("");
-
 const [results,setResults]=useState<any[]>([]);
 
 
 async function runSearch(){
 
 
-if(!search){
+if(!search.trim()){
 
 setResults([]);
 
@@ -25,126 +23,134 @@ return;
 
 
 
-const text=search.toLowerCase();
+let data:any[]=[];
 
 
+
+// CLIENTS
 
 const {data:clients}=await supabase
 
 .from("clients")
 
-.select(`
-*,
-salesmen(name)
-`);
+.select("*")
+
+.or(
+`
+name.ilike.%${search}%,
+phone.ilike.%${search}%,
+email.ilike.%${search}%,
+address.ilike.%${search}%
+`
+);
 
 
+
+if(clients){
+
+data.push(
+...clients.map((x:any)=>({
+
+type:"Client",
+
+name:x.name,
+
+info:
+`${x.phone || ""} ${x.email || ""} ${x.address || ""}`
+
+}))
+);
+
+}
+
+
+
+
+// SALESMEN
+
+const {data:salesmen}=await supabase
+
+.from("salesmen")
+
+.select("*")
+
+.or(
+`
+name.ilike.%${search}%,
+phone.ilike.%${search}%,
+email.ilike.%${search}%
+`
+);
+
+
+
+if(salesmen){
+
+data.push(
+...salesmen.map((x:any)=>({
+
+type:"Salesman",
+
+name:x.name,
+
+info:
+`${x.phone || ""} ${x.email || ""}`
+
+}))
+);
+
+}
+
+
+
+
+// JOBS
 
 const {data:jobs}=await supabase
 
 .from("jobs")
 
-.select(`
-*,
-clients(name,phone,address,email),
-salesmen(name)
-`);
+.select("*")
+
+.or(
+`
+status.ilike.%${search}%,
+notes.ilike.%${search}%
+`
+);
 
 
 
+if(jobs){
 
-let found:any[]=[];
-
-
-
-clients?.forEach((c:any)=>{
-
-
-const value=`
-
-${c.name}
-${c.phone}
-${c.email}
-${c.address}
-${c.salesmen?.name}
-
-`.toLowerCase();
-
-
-
-if(value.includes(text)){
-
-
-found.push({
-
-type:"Client",
-
-name:c.name,
-
-info:c.phone+" "+c.address
-
-});
-
-
-}
-
-
-});
-
-
-
-
-
-jobs?.forEach((j:any)=>{
-
-
-const value=`
-
-${j.notes}
-${j.status}
-${j.clients?.name}
-${j.clients?.phone}
-${j.clients?.address}
-${j.salesmen?.name}
-
-`.toLowerCase();
-
-
-
-if(value.includes(text)){
-
-
-found.push({
+data.push(
+...jobs.map((x:any)=>({
 
 type:"Job",
 
-name:j.clients?.name,
+name:"Job",
 
 info:
-j.status+
-" | "+
-j.salesmen?.name
+`${x.status || ""} ${x.notes || ""}`
 
-});
-
+}))
+);
 
 }
 
 
-});
 
+setResults(data);
 
-
-setResults(found);
 
 
 }
+
 
 
 
 
 return(
-
 
 <div>
 
@@ -156,38 +162,36 @@ fontWeight:800,
 marginBottom:20
 }}
 >
-
 Global Search
-
 </h1>
 
 
 
-<div
-style={{
-display:"flex",
-gap:10
-}}
->
-
-
 <input
-
-placeholder="Search name, phone, zip, salesman, job..."
 
 value={search}
 
 onChange={(e)=>setSearch(e.target.value)}
 
-style={{
+onKeyDown={(e)=>{
 
-padding:15,
+if(e.key==="Enter") runSearch();
+
+}}
+
+placeholder="Search client, phone, zip, salesman, job..."
+
+style={{
 
 width:"100%",
 
+padding:15,
+
 border:"1px solid #ddd",
 
-borderRadius:10
+borderRadius:10,
+
+fontSize:16
 
 }}
 
@@ -200,13 +204,19 @@ onClick={runSearch}
 
 style={{
 
+marginTop:15,
+
+padding:"12px 25px",
+
 background:"#D4AF37",
 
-padding:"0 25px",
+border:"none",
 
 borderRadius:10,
 
-fontWeight:700
+fontWeight:700,
+
+cursor:"pointer"
 
 }}
 
@@ -215,9 +225,6 @@ fontWeight:700
 Search
 
 </button>
-
-
-</div>
 
 
 
@@ -236,22 +243,21 @@ marginTop:30
 {
 results.map((r,i)=>(
 
-
 <div
 
 key={i}
 
 style={{
 
-background:"#fff",
-
 padding:20,
 
-marginBottom:10,
+background:"#fff",
 
 borderRadius:12,
 
-border:"1px solid #eee"
+marginBottom:10,
+
+border:"1px solid #ddd"
 
 }}
 
@@ -279,6 +285,7 @@ border:"1px solid #eee"
 </p>
 
 
+
 </div>
 
 
@@ -291,10 +298,10 @@ border:"1px solid #eee"
 </div>
 
 
+
 </div>
 
 
 )
-
 
 }
