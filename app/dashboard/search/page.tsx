@@ -29,20 +29,16 @@ let data:any[]=[];
 
 // CLIENTS
 
-const {data:clients}=await supabase
-
+const {data:clients,error:clientError}=await supabase
 .from("clients")
-
 .select("*")
-
 .or(
-`
-name.ilike.%${search}%,
-phone.ilike.%${search}%,
-email.ilike.%${search}%,
-address.ilike.%${search}%
-`
+`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%,address.ilike.%${search}%`
 );
+
+
+console.log("CLIENT RESULTS",clients);
+console.log("CLIENT ERROR",clientError);
 
 
 
@@ -68,19 +64,16 @@ info:
 
 // SALESMEN
 
-const {data:salesmen}=await supabase
-
+const {data:salesmen,error:salesError}=await supabase
 .from("salesmen")
-
 .select("*")
-
 .or(
-`
-name.ilike.%${search}%,
-phone.ilike.%${search}%,
-email.ilike.%${search}%
-`
+`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`
 );
+
+
+console.log("SALESMAN RESULTS",salesmen);
+console.log("SALESMAN ERROR",salesError);
 
 
 
@@ -106,18 +99,16 @@ info:
 
 // JOBS
 
-const {data:jobs}=await supabase
-
+const {data:jobs,error:jobError}=await supabase
 .from("jobs")
-
 .select("*")
-
 .or(
-`
-status.ilike.%${search}%,
-notes.ilike.%${search}%
-`
+`status.ilike.%${search}%,notes.ilike.%${search}%`
 );
+
+
+console.log("JOB RESULTS",jobs);
+console.log("JOB ERROR",jobError);
 
 
 
