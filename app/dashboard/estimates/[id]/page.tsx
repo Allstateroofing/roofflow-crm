@@ -49,15 +49,17 @@ export default function EstimateDetailPage() {
     if (!estimate) return;
 
     const { data, error } = await supabase
-      .from("jobs")
-      .insert({
-        client_id: estimate.client_id,
-        salesman_id: estimate.salesman_id,
-        estimate_id: estimate.id,
-        total_price: estimate.total,
-        status: "approved",
-        notes: estimate.title,
-      })
+.from("jobs")
+.insert({
+  client_id: estimate.client_id,
+  salesman_id: estimate.salesman_id,
+  estimate_id: estimate.id,
+  total_price: Number(estimate.total),
+  profit: 0,
+  status: "approved",
+  notes: estimate.title,
+})
+
       .select()
       .single();
 
@@ -67,12 +69,12 @@ export default function EstimateDetailPage() {
     }
 
     await supabase
-      .from("estimates")
-      .update({
-        converted_job_id: data.id,
-        status: "converted",
-      })
-      .eq("id", id);
+.from("estimates")
+.update({
+  status:"converted",
+})
+.eq("id",id);
+
 
     router.push(`/dashboard/jobs/${data.id}`);
   }
@@ -83,7 +85,7 @@ export default function EstimateDetailPage() {
     const doc = new jsPDF();
 
     doc.setFontSize(20);
-    doc.text("RoofFlowCRM Estimate", 20, 20);
+    doc.text("All State Roofing Estimate", 20, 20);
 
     doc.setFontSize(12);
 

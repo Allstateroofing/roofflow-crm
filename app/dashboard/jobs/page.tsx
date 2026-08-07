@@ -7,12 +7,15 @@ import {supabase} from "@/lib/supabase";
 
 export default function JobsPage(){
 
+
 const [jobs,setJobs]=useState<any[]>([]);
 const [loading,setLoading]=useState(true);
 const [profile,setProfile]=useState<any>(null);
 
 const [search,setSearch]=useState("");
 const [status,setStatus]=useState("");
+const [date,setDate]=useState("");
+const [time,setTime]=useState("");
 
 
 
@@ -22,6 +25,9 @@ loadProfile();
 loadJobs();
 
 },[]);
+
+
+
 
 async function loadProfile(){
 
@@ -35,24 +41,18 @@ user
 if(!user) return;
 
 
-const {data,error}=await supabase
+const {data}=await supabase
 .from("profiles")
 .select("role")
 .eq("id",user.id)
 .single();
 
 
-if(error){
-
-alert(error.message);
-return;
-
-}
-
-
 setProfile(data);
 
 }
+
+
 
 
 async function loadJobs(){
@@ -61,20 +61,22 @@ async function loadJobs(){
 const {data,error}=await supabase
 .from("jobs")
 .select(`
+
 id,
 status,
 scheduled_date,
+scheduled_time,
 total_price,
 profit,
 created_at,
 
-clients!jobs_client_id_fkey(
+clients(
 name,
 phone,
 zip_code
 ),
 
-salesmen!jobs_salesman_id_fkey(
+salesmen(
 name,
 commission_percent
 )
@@ -96,11 +98,7 @@ setJobs(data || []);
 
 setLoading(false);
 
-
 }
-
-
-
 
 
 
@@ -108,12 +106,8 @@ setLoading(false);
 async function deleteJob(id:string){
 
 
-const ok=confirm(
-"Delete this job?"
-);
-
-
-if(!ok)return;
+if(!confirm("Delete this job?"))
+return;
 
 
 
@@ -132,7 +126,6 @@ return;
 }
 
 
-
 loadJobs();
 
 
@@ -141,17 +134,12 @@ loadJobs();
 
 
 
-
-
-
 if(loading){
 
-return (
+return(
 
 <div style={{padding:30}}>
-
 Loading Jobs...
-
 </div>
 
 )
@@ -162,20 +150,17 @@ Loading Jobs...
 
 
 
-
-const filtered =
-jobs.filter(job=>{
+const filteredJobs = jobs.filter(job=>{
 
 
-const text =
+const text = `
 
-`
 ${job.clients?.name || ""}
 ${job.clients?.phone || ""}
 ${job.salesmen?.name || ""}
 ${job.status || ""}
-`
-.toLowerCase();
+
+`.toLowerCase();
 
 
 
@@ -193,6 +178,26 @@ job.status===status
 true
 )
 
+&&
+
+(
+date
+?
+job.scheduled_date===date
+:
+true
+)
+
+&&
+
+(
+time
+?
+job.scheduled_time===time
+:
+true
+)
+
 );
 
 
@@ -203,102 +208,66 @@ true
 
 
 
+return(
 
-const revenue =
-
-jobs.reduce(
-
-(sum,job)=>
-
-sum + Number(job.total_price || 0),
-
-0
-
-);
-
-
-
-
-
-const profit =
-
-jobs.reduce(
-
-(sum,job)=>
-
-sum + Number(job.profit || 0),
-
-0
-
-);
-
-
-
-
-
-
-const commission =
-
-jobs.reduce(
-
-(sum,job)=>{
-
-const c =
-Number(job.salesmen?.commission_percent || 0);
-
-return (
-
-sum +
-
-(
-Number(job.profit || 0)
-*
-c
-/
-100
-
-)
-
-);
-
-},
-
-0
-
-);
-
-
-
-
-
-
-
-
-return (
 
 <div style={{padding:30}}>
 
 
-<h1>
-Jobs Dashboard
+<div
+style={{
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center"
+}}
+>
+
+
+<div>
+
+<h1
+style={{
+fontSize:32,
+fontWeight:800,
+color:"#111827"
+}}
+>
+Jobs
 </h1>
 
+
+<p style={{color:"#6B7280"}}>
+Manage roofing projects
+</p>
+
+
+</div>
 
 
 
 <Link href="/dashboard/jobs/new">
 
-<button>
+<button
+
+style={{
+background:"#D4AF37",
+border:0,
+padding:"12px 22px",
+borderRadius:10,
+fontWeight:700
+}}
+
+>
+
 + New Job
+
 </button>
 
 </Link>
 
 
+</div>
 
-
-
-<br/><br/>
 
 
 
@@ -310,76 +279,144 @@ placeholder="Search client, phone, salesman..."
 
 value={search}
 
-onChange={(e)=>
-setSearch(e.target.value)
-}
+onChange={(e)=>setSearch(e.target.value)}
 
 style={{
-padding:10,
-width:300
+
+marginTop:25,
+padding:12,
+width:350,
+borderRadius:8,
+border:"1px solid #D1D5DB"
+
+}}
+
+/>
+
+
+<input
+
+type="date"
+
+value={date}
+
+onChange={(e)=>setDate(e.target.value)}
+
+style={{
+
+marginLeft:10,
+padding:12,
+borderRadius:8,
+border:"1px solid #D1D5DB"
+
 }}
 
 />
 
 
 
+<select
+
+value={time}
+
+onChange={(e)=>setTime(e.target.value)}
+
+style={{
+
+marginLeft:10,
+padding:12,
+borderRadius:8
+
+}}
+
+>
+
+<option value="">
+All Times
+</option>
+
+
+<option value="09:00-11:00">
+9 AM - 11 AM
+</option>
+
+
+<option value="11:00-13:00">
+11 AM - 1 PM
+</option>
+
+
+<option value="13:00-15:00">
+1 PM - 3 PM
+</option>
+
+
+<option value="15:00-17:00">
+3 PM - 5 PM
+</option>
+
+
+<option value="11:00">
+11:00 Exact
+</option>
+
+
+<option value="14:00">
+2:00 Exact
+</option>
+
+
+<option value="15:30">
+3:30 Exact
+</option>
+
+
+</select>
 
 
 <select
 
 value={status}
 
-onChange={(e)=>
-setStatus(e.target.value)
-}
+onChange={(e)=>setStatus(e.target.value)}
 
 style={{
+
 marginLeft:10,
-padding:10
+padding:12,
+borderRadius:8
+
 }}
 
 >
-
 
 <option value="">
 All Status
 </option>
 
-
 <option value="new">
 New
 </option>
-
 
 <option value="inspection">
 Inspection
 </option>
 
-
-<option value="estimate_sent">
-Estimate Sent
-</option>
-
-
 <option value="approved">
 Approved
 </option>
-
 
 <option value="scheduled">
 Scheduled
 </option>
 
-
 <option value="in_progress">
 In Progress
 </option>
 
-
 <option value="done">
 Done
 </option>
-
 
 
 </select>
@@ -390,43 +427,30 @@ Done
 
 
 
+<div
 
-<h2>
-Revenue:
-${revenue.toLocaleString()}
-</h2>
+style={{
 
+marginTop:30,
+background:"#fff",
+borderRadius:16,
+border:"1px solid #E5E7EB",
+overflowX:"auto"
 
+}}
 
-<h2>
-Profit:
-${profit.toLocaleString()}
-</h2>
-
-
-
-<h2>
-Salesman Commission:
-${commission.toLocaleString()}
-</h2>
-
-
-
-
-
+>
 
 
 
 <table
 
-border={1}
-
-cellPadding={10}
-
 style={{
-marginTop:30,
+
 width:"100%",
-borderCollapse:"collapse"
+borderCollapse:"collapse",
+minWidth:900
+
 }}
 
 >
@@ -435,29 +459,54 @@ borderCollapse:"collapse"
 
 <thead>
 
-<tr>
+<tr
 
-<th>
+style={{
+
+background:"#111827",
+color:"#D4AF37"
+
+}}
+
+>
+
+
+<th style={{padding:15,textAlign:"left"}}>
 Client
 </th>
 
-<th>
+
+<th style={{padding:15,textAlign:"left"}}>
 Salesman
 </th>
 
-<th>
+
+<th style={{padding:15,textAlign:"left"}}>
 Status
 </th>
 
-<th>
+
+<th style={{padding:15,textAlign:"left"}}>
 Price
 </th>
 
-<th>
+
+<th style={{padding:15,textAlign:"left"}}>
+Profit
+</th>
+
+
+<th style={{padding:15,textAlign:"left"}}>
 Date
 </th>
 
-<th>
+
+<th style={{padding:15,textAlign:"left"}}>
+Time
+</th>
+
+
+<th style={{padding:15,textAlign:"left"}}>
 Action
 </th>
 
@@ -469,47 +518,81 @@ Action
 
 
 
-
 <tbody>
 
 
 {
 
-filtered.map(job=>(
+filteredJobs.map(job=>(
 
 
-<tr key={job.id}>
+<tr
+
+key={job.id}
+
+style={{
+
+borderBottom:"1px solid #E5E7EB"
+
+}}
+
+>
 
 
-<td>
+<td style={{padding:15}}>
 
-{job.clients?.name}
+<b>
+{job.clients?.name || "-"}
+</b>
 
 <br/>
 
+<span style={{fontSize:13,color:"#6B7280"}}>
 {job.clients?.phone}
+</span>
+
 
 </td>
 
 
 
-<td>
+<td style={{padding:15}}>
 
-{job.salesmen?.name || "-"}
+{job.salesmen?.name || "Not Assigned"}
 
 </td>
 
 
 
-<td>
+
+<td style={{padding:15}}>
+
+
+<span
+
+style={{
+
+background:"#FEF3C7",
+padding:"6px 12px",
+borderRadius:20,
+fontWeight:700,
+fontSize:13
+
+}}
+
+>
 
 {job.status}
 
+</span>
+
+
 </td>
 
 
 
-<td>
+
+<td style={{padding:15,fontWeight:700}}>
 
 ${Number(job.total_price || 0).toLocaleString()}
 
@@ -517,22 +600,53 @@ ${Number(job.total_price || 0).toLocaleString()}
 
 
 
-<td>
 
-{job.scheduled_date || "-"}
+<td style={{padding:15,fontWeight:700,color:"#059669"}}>
+
+${Number(job.profit || 0).toLocaleString()}
 
 </td>
 
 
 
 
-<td>
+<td style={{padding:15}}>
+
+{job.scheduled_date || "-"}
+
+</td>
+
+
+<td style={{padding:15}}>
+
+{job.scheduled_time || "-"}
+
+</td>
+
+
+
+
+<td style={{padding:15}}>
 
 
 <Link href={`/dashboard/jobs/${job.id}`}>
 
-<button>
+<button
+
+style={{
+
+background:"#111827",
+color:"white",
+border:0,
+padding:"8px 14px",
+borderRadius:8
+
+}}
+
+>
+
 View
+
 </button>
 
 </Link>
@@ -540,16 +654,22 @@ View
 
 
 {
-profile?.role === "admin" && (
+
+profile?.role==="admin" &&
 
 <button
 
-onClick={()=>
-deleteJob(job.id)
-}
+onClick={()=>deleteJob(job.id)}
 
 style={{
-marginLeft:10
+
+marginLeft:8,
+background:"#DC2626",
+color:"white",
+border:0,
+padding:"8px 14px",
+borderRadius:8
+
 }}
 
 >
@@ -558,13 +678,12 @@ Delete
 
 </button>
 
-)
+
 }
 
 
 
 </td>
-
 
 
 </tr>
@@ -575,18 +694,19 @@ Delete
 }
 
 
-
 </tbody>
-
 
 
 </table>
 
 
+</div>
 
 
 </div>
 
+
 )
+
 
 }

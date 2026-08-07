@@ -18,23 +18,29 @@ const [payments,setPayments]=useState<any[]>([]);
 const [workers,setWorkers]=useState<any[]>([]);
 const [jobWorkers,setJobWorkers]=useState<any[]>([]);
 const [workerId,setWorkerId]=useState("");
+
 const [photos,setPhotos]=useState<any[]>([]);
 const [photoFile,setPhotoFile]=useState<File|null>(null);
 const [uploading,setUploading]=useState(false);
+
 const [etype,setEtype]=useState("");
 const [edesc,setEdesc]=useState("");
 const [eamount,setEamount]=useState("");
 
-
 const [pamount,setPamount]=useState("");
 const [pmethod,setPmethod]=useState("cash");
+
 const [commissionPaid,setCommissionPaid]=useState(false);
 
 
+
 useEffect(()=>{
+
 loadProfile();
 load();
+
 },[]);
+
 
 
 async function loadProfile(){
@@ -61,23 +67,31 @@ setProfile(data);
 }
 
 
+
+
+
 async function load(){
 
 
 const {data,error}=await supabase
 .from("jobs")
 .select(`
+
 *,
+
 clients(
 name,
 phone,
+email,
 zip_code,
 address
 ),
+
 salesmen(
 name,
 commission_percent
 )
+
 `)
 .eq("id",id)
 .single();
@@ -85,12 +99,17 @@ commission_percent
 
 
 if(error){
+
 alert(error.message);
 return;
+
 }
 
 
+
 setJob(data);
+
+
 
 setCommissionPaid(
 data.salesman_commission_paid || false
@@ -120,28 +139,48 @@ const {data:pa}=await supabase
 
 
 setPayments(pa || []);
+
+
+
+
+
 const {data:allWorkers}=await supabase
 .from("workers")
 .select("*")
 .order("name");
 
+
 setWorkers(allWorkers || []);
+
+
+
+
+
 
 const {data:jw}=await supabase
 .from("job_workers")
 .select(`
+
 id,
 worker_id,
+
 workers(
 id,
 name,
 phone,
 role
 )
+
 `)
 .eq("job_id",id);
 
+
+
 setJobWorkers(jw || []);
+
+
+
+
 
 const {data:photoData}=await supabase
 .from("job_photos")
@@ -152,7 +191,9 @@ const {data:photoData}=await supabase
 
 setPhotos(photoData || []);
 
+
 }
+
 
 
 
@@ -160,10 +201,13 @@ setPhotos(photoData || []);
 
 async function updateStatus(value:string){
 
+
 await supabase
 .from("jobs")
 .update({
+
 status:value
+
 })
 .eq("id",id);
 
@@ -171,7 +215,6 @@ status:value
 load();
 
 }
-
 
 
 
@@ -217,6 +260,7 @@ return;
 
 
 
+
 const totalExpenses =
 expenses.reduce(
 (sum,e)=>sum+Number(e.amount || 0),
@@ -242,6 +286,7 @@ totalExpenses
 
 
 
+
 setEtype("");
 setEdesc("");
 setEamount("");
@@ -249,8 +294,8 @@ setEamount("");
 
 load();
 
-}
 
+}
 
 
 
@@ -281,14 +326,9 @@ return;
 }
 
 
-
 load();
 
-
 }
-
-
-
 
 
 
@@ -305,7 +345,6 @@ alert("Enter valid amount");
 return;
 
 }
-
 
 
 
@@ -354,9 +393,41 @@ load();
 
 
 
+async function deletePayment(paymentId:string){
+
+
+if(!confirm("Delete payment?"))
+return;
+
+
+
+const {error}=await supabase
+.from("payments")
+.delete()
+.eq("id",paymentId);
+
+
+
+if(error){
+
+alert(error.message);
+return;
+
+}
+
+
+load();
+
+
+}
+
+
+
+
 
 
 async function addWorker(){
+
 
 if(!workerId){
 
@@ -366,14 +437,17 @@ return;
 }
 
 
+
 const {error}=await supabase
 .from("job_workers")
 .insert({
 
 job_id:id,
+
 worker_id:workerId
 
 });
+
 
 
 if(error){
@@ -388,7 +462,11 @@ setWorkerId("");
 
 load();
 
+
 }
+
+
+
 
 
 
@@ -399,36 +477,12 @@ if(!confirm("Remove worker?"))
 return;
 
 
+
 const {error}=await supabase
 .from("job_workers")
 .delete()
 .eq("id",jobWorkerId);
 
-
-if(error){
-
-alert(error.message);
-return;
-
-}
-
-
-load();
-
-
-}
-
-async function deletePayment(paymentId:string){
-
-
-if(!confirm("Delete payment?"))
-return;
-
-
-const {error}=await supabase
-.from("payments")
-.delete()
-.eq("id",paymentId);
 
 
 if(error){
@@ -472,7 +526,14 @@ setCommissionPaid(true);
 load();
 
 }
+
+
+
+
+
+
 async function uploadPhoto(){
+
 
 if(!photoFile){
 
@@ -481,14 +542,21 @@ return;
 
 }
 
+
 setUploading(true);
 
-const fileName=
+
+
+const fileName =
 `${id}-${Date.now()}-${photoFile.name}`;
+
+
 
 const {error:uploadError}=await supabase.storage
 .from("job-photos")
 .upload(fileName,photoFile);
+
+
 
 if(uploadError){
 
@@ -498,18 +566,28 @@ return;
 
 }
 
+
+
+
+
 const {data}=supabase.storage
 .from("job-photos")
 .getPublicUrl(fileName);
+
+
+
 
 const {error}=await supabase
 .from("job_photos")
 .insert({
 
 job_id:id,
+
 url:data.publicUrl
 
 });
+
+
 
 if(error){
 
@@ -518,6 +596,8 @@ setUploading(false);
 return;
 
 }
+
+
 
 setPhotoFile(null);
 
@@ -525,19 +605,29 @@ setUploading(false);
 
 load();
 
+
 }
 
+
+
+
+
+
+
 async function deletePhoto(photoId:string,url:string){
+
 
 if(!confirm("Delete photo?"))
 return;
 
 
-// fshi nga tabela
+
+
 const {error}=await supabase
 .from("job_photos")
 .delete()
 .eq("id",photoId);
+
 
 
 if(error){
@@ -548,8 +638,11 @@ return;
 }
 
 
-// merr emrin e file nga URL
-const fileName = url.split("/").pop();
+
+
+
+const fileName=url.split("/").pop();
+
 
 
 if(fileName){
@@ -563,9 +656,14 @@ fileName
 }
 
 
+
 load();
 
+
 }
+
+
+
 
 
 
@@ -579,11 +677,13 @@ return <div>Loading...</div>;
 
 
 
+
 const expenseTotal =
 expenses.reduce(
 (sum,e)=>sum+Number(e.amount || 0),
 0
 );
+
 
 
 
@@ -595,10 +695,12 @@ payments.reduce(
 
 
 
+
 const profit =
 Number(job.total_price || 0)
 -
 expenseTotal;
+
 
 
 
@@ -611,162 +713,439 @@ Number(job.salesmen?.commission_percent || 0)
 
 
 
+const card={
+
+background:"#fff",
+
+padding:25,
+
+borderRadius:15,
+
+marginTop:20
+
+};
+
+
+
+
+const table={
+
+width:"100%",
+
+borderCollapse:"collapse" as const
+
+};
+
+const buttonStyle={
+
+background:"#D4AF37",
+color:"#111827",
+border:"none",
+padding:"10px 18px",
+borderRadius:8,
+fontWeight:700,
+cursor:"pointer",
+marginLeft:10
+
+};
+
+
+const deleteButtonStyle={
+
+background:"#DC2626",
+color:"#fff",
+border:"none",
+padding:"8px 14px",
+borderRadius:8,
+fontWeight:700,
+cursor:"pointer"
+
+};
+
+
+
 return (
 
-<div style={{padding:30}}>
+<div
+
+style={{
+
+padding:30,
+
+background:"#f8fafc",
+
+minHeight:"100vh"
+
+}}
+
+>
 
 
-<h1>
+
+
+<h1
+
+style={{
+
+fontSize:32,
+
+fontWeight:800
+
+}}
+
+>
+
 Job Detail
+
 </h1>
 
 
 
-<h2>Client</h2>
-
-<p>{job.clients?.name || "-"}</p>
-
-<p>{job.clients?.phone || "-"}</p>
-
-<p>{job.clients?.address || "-"}</p>
-
-<p>
-ZIP: {job.clients?.zip_code || "-"}
-</p>
 
 
 
+<div style={card}>
 
 
-<h2>Salesman</h2>
+<h2>
+Client Information
+</h2>
 
-<p>
+
+
+<table style={table}>
+
+
+<tbody>
+
+
+<tr>
+
+<td><b>Name</b></td>
+
+<td>
+{job.clients?.name || "-"}
+</td>
+
+</tr>
+
+
+
+<tr>
+
+<td><b>Phone</b></td>
+
+<td>
+{job.clients?.phone || "-"}
+</td>
+
+</tr>
+
+
+
+<tr>
+
+<td><b>Email</b></td>
+
+<td>
+{job.clients?.email || "-"}
+</td>
+
+</tr>
+
+
+
+
+<tr>
+
+<td><b>Address</b></td>
+
+<td>
+{job.clients?.address || "-"}
+</td>
+
+</tr>
+
+
+
+
+<tr>
+
+<td><b>ZIP</b></td>
+
+<td>
+{job.clients?.zip_code || "-"}
+</td>
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+
+
+
+
+<div style={card}>
+
+
+<h2>
+Salesman
+</h2>
+
+
+
+<table style={table}>
+
+
+<tbody>
+
+
+<tr>
+
+<td>Name</td>
+
+<td>
 {job.salesmen?.name || "-"}
-</p>
+</td>
 
-<p>
-Commission:
+
+</tr>
+
+
+
+
+<tr>
+
+<td>
+Commission
+</td>
+
+
+<td>
 {job.salesmen?.commission_percent || 0}%
-</p>
+</td>
+
+
+</tr>
+
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
 
 
 
 
 
 
-<h2>Status</h2>
+
+<div style={card}>
+
+
+<h2>
+Status
+</h2>
+
 
 
 <select
+
 value={job.status}
+
 disabled={
-profile?.role === "salesman" ||
-profile?.role === "secretary"
+profile?.role==="salesman" ||
+profile?.role==="secretary"
 }
+
 onChange={(e)=>updateStatus(e.target.value)}
+
+style={{
+
+padding:10,
+
+borderRadius:8
+
+}}
+
 >
 
-<option value="new">New</option>
-<option value="inspection">Inspection</option>
-<option value="estimate_sent">Estimate Sent</option>
-<option value="approved">Approved</option>
-<option value="scheduled">Scheduled</option>
-<option value="in_progress">In Progress</option>
-<option value="done">Done</option>
+
+<option value="new">
+New
+</option>
+
+
+<option value="inspection">
+Inspection
+</option>
+
+
+<option value="estimate_sent">
+Estimate Sent
+</option>
+
+
+<option value="approved">
+Approved
+</option>
+
+
+<option value="scheduled">
+Scheduled
+</option>
+
+
+<option value="in_progress">
+In Progress
+</option>
+
+
+<option value="done">
+Done
+</option>
+
 
 
 </select>
 
 
+</div>
 
 
 
 
 
-<h2>Financial</h2>
 
 
-<p>
-Price: ${Number(job.total_price).toLocaleString()}
-</p>
+<div style={card}>
 
 
-<p>
-Expenses: ${expenseTotal.toLocaleString()}
-</p>
+<h2>
+Financial
+</h2>
 
 
-<p>
-Paid: ${paid.toLocaleString()}
-</p>
+
+<table style={table}>
 
 
-<p>
-Balance:
-${(Number(job.total_price)-paid).toLocaleString()}
-</p>
+<thead>
 
 
-<p>
-Profit:
+<tr
+
+style={{
+
+background:"#111827",
+
+color:"#D4AF37"
+
+}}
+
+>
+
+
+<th>
+Price
+</th>
+
+
+<th>
+Expenses
+</th>
+
+
+<th>
+Paid
+</th>
+
+
+<th>
+Balance
+</th>
+
+
+<th>
+Profit
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+
+<tbody>
+
+
+<tr>
+
+
+<td>
+${Number(job.total_price || 0).toLocaleString()}
+</td>
+
+
+<td>
+${expenseTotal.toLocaleString()}
+</td>
+
+
+<td>
+${paid.toLocaleString()}
+</td>
+
+
+<td>
+${(Number(job.total_price || 0)-paid).toLocaleString()}
+</td>
+
+
+<td>
 ${profit.toLocaleString()}
-</p>
+</td>
 
 
-<p>
-Salesman Commission:
-${commission.toLocaleString()}
-</p>
-
-{
-profile?.role === "admin" && (
-
-commissionPaid
-?
-(
-<p
-style={{
-color:"green",
-fontWeight:700
-}}
->
-✓ Commission Paid
-</p>
-)
-:
-(
-<button
-onClick={markCommissionPaid}
-style={{
-marginTop:10,
-padding:"10px 15px",
-background:"#D4AF37",
-border:"none",
-borderRadius:8,
-cursor:"pointer",
-fontWeight:700
-}}
->
-Mark Commission Paid
-</button>
-)
-
-)
-}
+</tr>
 
 
+</tbody>
 
 
+</table>
 
+
+</div>
+{/* EXPENSES */}
+
+<div style={card}>
+
+<h2>
+Expenses
+</h2>
 
 
 {
-profile?.role === "admin" && (
+profile?.role==="admin" &&
 
 <div>
-
-<h2>Add Expense</h2>
-
 
 <input
 placeholder="Type"
@@ -775,13 +1154,11 @@ onChange={(e)=>setEtype(e.target.value)}
 />
 
 
-
 <input
 placeholder="Description"
 value={edesc}
 onChange={(e)=>setEdesc(e.target.value)}
 />
-
 
 
 <input
@@ -792,169 +1169,281 @@ onChange={(e)=>setEamount(e.target.value)}
 />
 
 
-
-<button onClick={addExpense}>
+<button
+onClick={addExpense}
+style={buttonStyle}
+>
 Add Expense
 </button>
 
-
 </div>
 
-)
 }
 
 
 
+<table style={table}>
+
+<thead>
+
+<tr>
+
+<th>Type</th>
+<th>Description</th>
+<th>Amount</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
 
 
 
-
-<h3>Expenses</h3>
+<tbody>
 
 
 {
 expenses.map(e=>(
 
-<div key={e.id}>
+<tr key={e.id}>
 
 
+<td>
 {e.type}
--
+</td>
+
+
+<td>
 {e.description}
--
+</td>
+
+
+<td>
 ${e.amount}
+</td>
 
 
+<td>
 
 {
-profile?.role === "admin" && (
+profile?.role==="admin" &&
 
 <button
 onClick={()=>deleteExpense(e.id)}
-style={{marginLeft:10}}
+style={deleteButtonStyle}
 >
 Delete
 </button>
 
-)
 }
 
+</td>
 
-</div>
+
+</tr>
 
 ))
 
 }
 
 
+</tbody>
+
+
+</table>
+
+
+</div>
 
 
 
+
+
+
+
+{/* PAYMENTS */}
+
+<div style={card}>
+
+
+<h2>
+Payments
+</h2>
 
 
 
 {
-profile?.role === "admin" && (
+profile?.role==="admin" &&
 
 <div>
 
-<h2>Add Payment</h2>
-
 
 <input
+
 type="number"
+
 placeholder="Amount"
+
 value={pamount}
+
 onChange={(e)=>setPamount(e.target.value)}
 />
 
 
+
 <select
+
 value={pmethod}
+
 onChange={(e)=>setPmethod(e.target.value)}
+
 >
+
 
 <option value="cash">
 Cash
 </option>
 
+
 <option value="check">
 Check
 </option>
+
 
 <option value="card">
 Card
 </option>
 
+
 <option value="bank">
 Bank
 </option>
 
+
 </select>
 
 
-<button onClick={addPayment}>
+
+<button
+onClick={addPayment}
+style={buttonStyle}
+>
 Add Payment
 </button>
 
 
 </div>
 
-)
 }
 
 
 
 
+<table style={table}>
+
+
+<thead>
+
+<tr>
+
+<th>
+Amount
+</th>
+
+<th>
+Method
+</th>
+
+<th>
+Status
+</th>
+
+<th>
+Action
+</th>
+
+
+</tr>
+
+</thead>
 
 
 
-<h3>Payments</h3>
+<tbody>
 
 
 {
 payments.map(p=>(
 
-<div key={p.id}>
+<tr key={p.id}>
 
 
+<td>
 ${p.amount}
--
-{p.payment_type}
--
-{p.method}
--
-{p.status}
+</td>
 
+
+<td>
+{p.method}
+</td>
+
+
+<td>
+{p.status}
+</td>
+
+
+<td>
 
 
 {
-profile?.role === "admin" && (
+profile?.role==="admin" &&
 
 <button
 onClick={()=>deletePayment(p.id)}
-style={{marginLeft:10}}
+style={deleteButtonStyle}
 >
 Delete
 </button>
 
-)
 }
+
+
+</td>
+
+
+</tr>
+
+
+))
+
+}
+
+
+</tbody>
+
+
+</table>
 
 
 </div>
 
-))
-}
 
 
 
-<hr/>
-<hr/>
+
+
+
+{/* PHOTOS */}
+
+
+<div style={card}>
+
 
 <h2>
 Photos
 </h2>
+
 
 
 <input
@@ -972,15 +1461,14 @@ e.target.files?.[0] || null
 />
 
 
+
 <button
 
 onClick={uploadPhoto}
 
 disabled={uploading}
 
-style={{
-marginLeft:10
-}}
+style={buttonStyle}
 
 >
 
@@ -992,14 +1480,33 @@ uploading
 "Upload Photo"
 }
 
+
 </button>
-<h3>
-Job Photos
-</h3>
+
+
+
+
+<div
+
+style={{
+
+display:"flex",
+
+gap:15,
+
+flexWrap:"wrap",
+
+marginTop:20
+
+}}
+
+>
 
 
 {
+
 photos.map(photo=>(
+
 
 <div key={photo.id}>
 
@@ -1008,40 +1515,75 @@ photos.map(photo=>(
 
 src={photo.url}
 
-width="250"
+width={200}
 
 style={{
-marginTop:10,
-borderRadius:8
+
+borderRadius:10
+
 }}
 
 />
 
+
+
 {
-profile?.role === "admin" && (
+
+profile?.role==="admin" &&
+
 
 <button
-onClick={()=>deletePhoto(photo.id,photo.url)}
->
-Delete Photo
-</button>
 
-)
+onClick={()=>
+deletePhoto(photo.id,photo.url)
 }
 
+style={deleteButtonStyle}
+
+>
+
+Delete
+
+</button>
+
+
+}
+
+
 </div>
+
 
 ))
 
 }
-{
-profile?.role === "admin" && (
 
-<div>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{/* WORKERS */}
+
+
+
+<div style={card}>
+
 
 <h2>
 Workers
 </h2>
+
+
 
 
 <select
@@ -1052,22 +1594,28 @@ onChange={(e)=>setWorkerId(e.target.value)}
 
 >
 
+
 <option value="">
 Select Worker
 </option>
 
 
 {
+
 workers.map(w=>(
 
 <option
+
 key={w.id}
+
 value={w.id}
+
 >
 
 {w.name}
 
 </option>
+
 
 ))
 
@@ -1078,80 +1626,131 @@ value={w.id}
 
 
 
+
+
 <button
 
 onClick={addWorker}
 
-style={{marginLeft:10}}
+style={buttonStyle}
 
 >
+
 Assign Worker
+
 </button>
 
 
-</div>
-
-)
-}
 
 
 
+<table style={table}>
 
-<h3>
-Assigned Workers
-</h3>
+
+<thead>
+
+<tr>
+
+<th>
+Name
+</th>
+
+<th>
+Phone
+</th>
+
+<th>
+Role
+</th>
+
+<th>
+Action
+</th>
+
+
+</tr>
+
+</thead>
+
+
+
+<tbody>
 
 
 {
+
 jobWorkers.map(w=>(
 
-<div
 
-key={w.id}
+<tr key={w.id}>
 
-style={{
-border:"1px solid #ccc",
-padding:10,
-marginTop:10
-}}
 
->
-
-<b>
+<td>
 {w.workers?.name}
-</b>
+</td>
 
 
-<p>
-Phone: {w.workers?.phone}
-</p>
+<td>
+{w.workers?.phone}
+</td>
 
 
-<p>
-Role: {w.workers?.role}
-</p>
+<td>
+{w.workers?.role}
+</td>
+
+
+
+<td>
 
 
 {
-profile?.role === "admin" && (
+
+profile?.role==="admin" &&
+
 
 <button
 
 onClick={()=>deleteWorker(w.id)}
 
+style={deleteButtonStyle}
+
 >
+
 Remove
+
 </button>
 
-)
+
 }
+
+
+
+</td>
+
+
+</tr>
+
+
+))
+
+
+}
+
+
+</tbody>
+
+
+</table>
+
 
 
 </div>
 
-))
 
-}
+
+
+
 
 
 </div>

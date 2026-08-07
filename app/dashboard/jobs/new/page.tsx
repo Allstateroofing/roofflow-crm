@@ -1,116 +1,64 @@
 "use client";
 
 import {useEffect,useState} from "react";
-import {useRouter} from "next/navigation";
+import {useSearchParams,useRouter} from "next/navigation";
 import {supabase} from "@/lib/supabase";
 
 
 export default function NewJobPage(){
 
-const router=useRouter();
+
+const router = useRouter();
+
+const searchParams = useSearchParams();
+
+const clientId = searchParams.get("client");
 
 
-const [clients,setClients]=useState<any[]>([]);
+const [client,setClient]=useState<any>(null);
+
 const [salesmen,setSalesmen]=useState<any[]>([]);
 
 
-const [clientId,setClientId]=useState("");
-const [salesmanId,setSalesmanId]=useState("");
+const [salesman,setSalesman]=useState("");
 
 const [status,setStatus]=useState("new");
-const [date,setDate]=useState("");
+
 const [price,setPrice]=useState("");
+
+const [date,setDate]=useState("");
+
 const [notes,setNotes]=useState("");
 
 
 
 useEffect(()=>{
 
-load();
+if(clientId){
+loadClient();
+}
 
-},[]);
-
-
-
-async function load(){
+loadSalesmen();
 
 
-const {data:c}=await supabase
+},[clientId]);
+
+
+
+
+
+async function loadClient(){
+
+
+const {data,error}=await supabase
+
 .from("clients")
-.select("id,name")
-.order("name");
 
+.select("*")
 
-setClients(c || []);
+.eq("id",clientId)
 
-
-
-
-const {data:s}=await supabase
-.from("salesmen")
-.select("id,name,commission_percent")
-.order("name");
-
-
-setSalesmen(s || []);
-
-
-}
-
-
-
-
-
-
-
-async function createJob(){
-
-
-if(!clientId){
-
-alert("Select client");
-return;
-
-}
-
-
-if(!salesmanId){
-
-alert("Select salesman");
-return;
-
-}
-
-
-if(Number(price)<=0){
-
-alert("Enter valid price");
-return;
-
-}
-
-
-
-const {error}=await supabase
-.from("jobs")
-.insert({
-
-client_id:clientId,
-
-salesman_id:salesmanId,
-
-status,
-
-scheduled_date:date || null,
-
-total_price:Number(price),
-
-profit:0,
-
-notes
-
-
-});
+.single();
 
 
 
@@ -122,8 +70,7 @@ return;
 }
 
 
-
-router.push("/dashboard/jobs");
+setClient(data);
 
 
 }
@@ -132,64 +79,211 @@ router.push("/dashboard/jobs");
 
 
 
-return (
+async function loadSalesmen(){
+
+
+const {data,error}=await supabase
+
+.from("salesmen")
+
+.select("id,name")
+
+.order("name");
+
+
+if(error){
+
+console.log(error);
+return;
+
+}
+
+
+setSalesmen(data || []);
+
+
+}
+
+
+
+
+
+async function saveJob(){
+
+
+if(!client){
+
+alert("Client not loaded");
+
+return;
+
+}
+
+
+
+const {error}=await supabase
+
+.from("jobs")
+
+.insert({
+
+client_id:client.id,
+
+salesman_id:salesman || null,
+
+status,
+
+total_price:Number(price || 0),
+
+scheduled_date:date || null,
+
+notes
+
+});
+
+
+
+
+if(error){
+
+alert(error.message);
+
+return;
+
+}
+
+
+
+alert("Job Created");
+
+
+router.push(`/dashboard/clients/${clientId}`);
+
+
+}
+
+
+
+
+
+return(
+
 
 <div style={{padding:30}}>
 
 
 <h1>
+
 Create Job
+
 </h1>
 
 
 
-<h3>Client</h3>
-
-
-<select
-
-value={clientId}
-
-onChange={(e)=>setClientId(e.target.value)}
-
->
-
-
-<option value="">
-Select Client
-</option>
-
 
 {
-clients.map(c=>(
+client &&
 
-<option
-key={c.id}
-value={c.id}
+<div
+
+style={{
+
+background:"#fff",
+
+padding:20,
+
+borderRadius:15,
+
+marginBottom:20
+
+}}
+
 >
 
-{c.name}
 
-</option>
+<h2>
 
-))
+Client Information
+
+</h2>
+
+
+<p>
+<b>Name:</b> {client.name}
+</p>
+
+
+<p>
+<b>Phone:</b> {client.phone}
+</p>
+
+
+<p>
+<b>Email:</b> {client.email}
+</p>
+
+
+<p>
+<b>Address:</b> {client.address}
+</p>
+
+
+<p>
+<b>ZIP:</b> {client.zip_code}
+</p>
+
+
+</div>
+
 }
 
 
-</select>
 
 
 
+<div
+
+style={{
+
+background:"#fff",
+
+padding:25,
+
+borderRadius:15
+
+}}
+
+>
 
 
-<h3>Salesman</h3>
+<h2>
+
+Job Details
+
+</h2>
+
+
+
+<label>
+Salesman
+</label>
+
+
+<br/>
 
 
 <select
 
-value={salesmanId}
+value={salesman}
 
-onChange={(e)=>setSalesmanId(e.target.value)}
+onChange={(e)=>setSalesman(e.target.value)}
+
+style={{
+
+padding:10,
+width:300
+
+}}
 
 >
 
@@ -200,18 +294,25 @@ Select Salesman
 
 
 {
+
 salesmen.map(s=>(
 
+
 <option
+
 key={s.id}
+
 value={s.id}
+
 >
 
 {s.name}
 
 </option>
 
+
 ))
+
 }
 
 
@@ -219,10 +320,18 @@ value={s.id}
 
 
 
+<br/><br/>
 
 
 
-<h3>Status</h3>
+
+
+<label>
+Status
+</label>
+
+
+<br/>
 
 
 <select
@@ -231,6 +340,13 @@ value={status}
 
 onChange={(e)=>setStatus(e.target.value)}
 
+style={{
+
+padding:10,
+width:300
+
+}}
+
 >
 
 
@@ -238,17 +354,31 @@ onChange={(e)=>setStatus(e.target.value)}
 New
 </option>
 
+
+<option value="inspection">
+Inspection
+</option>
+
+
+<option value="estimate_sent">
+Estimate Sent
+</option>
+
+
 <option value="approved">
 Approved
 </option>
+
 
 <option value="scheduled">
 Scheduled
 </option>
 
+
 <option value="in_progress">
 In Progress
 </option>
+
 
 <option value="done">
 Done
@@ -260,8 +390,33 @@ Done
 
 
 
+<br/><br/>
 
-<h3>Date</h3>
+
+
+
+<input
+
+placeholder="Job Price"
+
+value={price}
+
+onChange={(e)=>setPrice(e.target.value)}
+
+style={{
+
+padding:10,
+width:300
+
+}}
+
+/>
+
+
+
+<br/><br/>
+
+
 
 
 <input
@@ -272,52 +427,71 @@ value={date}
 
 onChange={(e)=>setDate(e.target.value)}
 
-/>
+style={{
 
+padding:10,
+width:300
 
-
-
-
-<h3>Total Price</h3>
-
-
-<input
-
-type="number"
-
-value={price}
-
-onChange={(e)=>setPrice(e.target.value)}
-
-placeholder="15000"
+}}
 
 />
-
-
-
-
-
-<h3>Notes</h3>
-
-
-<textarea
-
-value={notes}
-
-onChange={(e)=>setNotes(e.target.value)}
-
-/>
-
-
 
 
 
 <br/><br/>
 
 
-<button onClick={createJob}>
 
-Create Job
+
+
+<textarea
+
+placeholder="Job Notes"
+
+value={notes}
+
+onChange={(e)=>setNotes(e.target.value)}
+
+style={{
+
+width:300,
+
+height:100,
+
+padding:10
+
+}}
+
+/>
+
+
+
+<br/><br/>
+
+
+
+
+<button
+
+onClick={saveJob}
+
+style={{
+
+background:"#D4AF37",
+
+padding:"12px 25px",
+
+border:0,
+
+borderRadius:10,
+
+fontWeight:700
+
+}}
+
+>
+
+Save Job
 
 </button>
 
@@ -325,6 +499,11 @@ Create Job
 
 </div>
 
+
+</div>
+
+
 )
+
 
 }

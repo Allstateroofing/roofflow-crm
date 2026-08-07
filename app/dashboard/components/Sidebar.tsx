@@ -140,11 +140,11 @@ return (
 
 style={{
 
-width:240,
+width:260,
 minHeight:"100vh",
 background:"#111827",
 color:"white",
-padding:20
+padding:"25px 20px"
 
 }}
 
@@ -152,22 +152,36 @@ padding:20
 
 
 <h2
-
 style={{
-
-marginBottom:25
-
+fontSize:20,
+fontWeight:800,
+lineHeight:"1.2",
+marginBottom:8,
+whiteSpace:"nowrap"
 }}
-
 >
-
-🏠 RoofFlowCRM
-
+🏠 All State Roofing
 </h2>
 
+<p
+style={{
+fontSize:11,
+color:"#9CA3AF",
+margin:0
+}}
+>
+Roofing & Chimney Management
+</p>
 
 
-<hr />
+
+<hr
+style={{
+marginTop:15,
+marginBottom:20,
+borderColor:"#374151"
+}}
+/>
 
 
 
@@ -241,11 +255,9 @@ margin:"25px 0"
 
 />
 
-
-
 <Link
 
-href="/login"
+href="/auth/login"
 
 style={{
 
@@ -259,6 +271,8 @@ textDecoration:"none"
 Logout
 
 </Link>
+
+
 
 
 

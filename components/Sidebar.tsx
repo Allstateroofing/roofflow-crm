@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -9,9 +9,9 @@ import { supabase } from "@/lib/supabase";
 export default function Sidebar(){
 
 const pathname = usePathname();
+const router = useRouter();
 
 const [role,setRole]=useState("");
-
 const [open,setOpen]=useState(false);
 
 
@@ -56,6 +56,17 @@ setRole(data.role);
 
 
 }
+
+
+
+async function logout(){
+
+await supabase.auth.signOut();
+
+router.replace("/auth/login");
+
+}
+
 
 
 
@@ -194,7 +205,9 @@ cursor:"pointer"
 
 
 
+
 {
+
 open &&
 
 <div
@@ -216,7 +229,6 @@ zIndex:9998
 />
 
 }
-
 
 
 
@@ -284,29 +296,43 @@ borderRadius:12
 
 
 
-<h2>
+<h2
+
+style={{
+
+marginTop:15,
+
+marginBottom:5
+
+}}
+
+>
 
 All State Roofing
 
 </h2>
 
 
+
 <p
 
 style={{
 
-color:"#9CA3AF"
+color:"#9CA3AF",
+
+margin:0
 
 }}
 
 >
 
-RoofFlowCRM
+Roofing & Chimney Management
 
 </p>
 
 
 </div>
+
 
 
 
@@ -333,7 +359,6 @@ const active=pathname===item[2];
 
 
 return(
-
 
 <Link
 
@@ -386,17 +411,15 @@ fontWeight:700
 
 </Link>
 
-
 )
 
-
 })
-
 
 }
 
 
 </div>
+
 
 
 
@@ -414,17 +437,25 @@ borderTop:"1px solid #374151"
 >
 
 
-<Link
+<button
 
-href="/login"
+onClick={logout}
 
 style={{
+
+background:"transparent",
+
+border:"none",
 
 color:"#EF4444",
 
 fontWeight:700,
 
-textDecoration:"none"
+fontSize:16,
+
+cursor:"pointer",
+
+padding:0
 
 }}
 
@@ -432,15 +463,15 @@ textDecoration:"none"
 
 🚪 Logout
 
-</Link>
+</button>
 
 
 </div>
 
 
 
-</aside>
 
+</aside>
 
 
 </>

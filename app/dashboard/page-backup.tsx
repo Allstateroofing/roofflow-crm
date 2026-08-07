@@ -79,7 +79,7 @@ export default function DashboardPage() {
     <div style={{padding:30}}>
 
       <h1>
-        RoofFlowCRM Dashboard
+        All State Roofing Dashboard
       </h1>
 
 

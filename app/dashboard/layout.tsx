@@ -1,6 +1,8 @@
 "use client";
 
+import {useEffect,useState} from "react";
 import Sidebar from "@/components/Sidebar";
+import {supabase} from "@/lib/supabase";
 
 
 export default function DashboardLayout({
@@ -8,24 +10,112 @@ export default function DashboardLayout({
 children
 
 }:{
-
 children:React.ReactNode
-
 }){
 
 
-return(
+const [profile,setProfile]=useState<any>(null);
+
+
+
+useEffect(()=>{
+
+loadProfile();
+
+},[]);
+
+
+
+async function loadProfile(){
+
+
+const {
+data:{
+user
+}
+
+}=await supabase.auth.getUser();
+
+
+if(!user) return;
+
+
+
+const {data,error}=await supabase
+.from("profiles")
+.select("*")
+.eq("id",user.id)
+.single();
+
+
+
+console.log("PROFILE:",data);
+console.log("PROFILE ERROR:",error);
+
+
+setProfile(data);
+
+}
+
+
+
+function roleTitle(){
+
+if(profile?.role==="admin")
+return "Administrator";
+
+
+if(profile?.role==="secretary")
+return "Office";
+
+
+if(profile?.role==="salesman")
+return profile?.full_name || "Salesman";
+
+
+if(profile?.role==="worker")
+return "Worker";
+
+
+return "User";
+
+}
+
+
+
+function roleAccount(){
+
+if(profile?.role==="admin")
+return "Admin Account";
+
+
+if(profile?.role==="secretary")
+return "Secretary Account";
+
+
+if(profile?.role==="salesman")
+return "Salesman Account";
+
+
+if(profile?.role==="worker")
+return "Worker Account";
+
+
+return "";
+
+}
+
+
+
+
+return (
 
 <div
-
 style={{
-
 display:"flex",
 minHeight:"100vh",
-background:"#F8FAFC"
-
+background:"#f8fafc"
 }}
-
 >
 
 
@@ -33,94 +123,28 @@ background:"#F8FAFC"
 
 
 <div
-
 style={{
-  flex:1,
-  display:"flex",
-  flexDirection:"column",
-  marginLeft:0
+flex:1
 }}
-
 >
 
 
-<header
-
+<div
 style={{
-
 height:70,
-background:"#ffffff",
+display:"flex",
+justifyContent:"flex-end",
+alignItems:"center",
+background:"#fff",
 borderBottom:"1px solid #e5e7eb",
-display:"flex",
-alignItems:"center",
-justifyContent:"space-between",
-padding:"0 30px"
-
-}}
-
->
-
-
-<div>
-
-<h2
-
-style={{
-
-margin:0,
-fontSize:22,
-fontWeight:800,
-color:"#111827"
-
-}}
-
->
-
-RoofFlowCRM
-
-</h2>
-
-
-<p
-
-style={{
-
-margin:0,
-fontSize:12,
-color:"#6b7280"
-
-}}
-
->
-
-Roofing Management
-
-</p>
-
-
-</div>
-
-
-
-
-
-<div
-
-style={{
-
-display:"flex",
-alignItems:"center",
+padding:"0 30px",
 gap:12
-
 }}
-
 >
 
 
 <div
-
 style={{
-
 width:42,
 height:42,
 borderRadius:"50%",
@@ -129,36 +153,36 @@ display:"flex",
 alignItems:"center",
 justifyContent:"center",
 fontWeight:800
-
 }}
-
 >
 
-A
+{profile?.full_name?.charAt(0) || "A"}
 
 </div>
 
 
+
 <div>
 
-<b>
-Administrator
-</b>
-
-<br/>
-
-<span
-
+<div
 style={{
-
-fontSize:12,
-color:"#6b7280"
-
+fontWeight:700
 }}
-
 >
 
-Admin Account
+{roleTitle()}
+
+</div>
+
+
+<span
+style={{
+fontSize:12,
+color:"#6b7280"
+}}
+>
+
+{roleAccount()}
 
 </span>
 
@@ -169,20 +193,11 @@ Admin Account
 </div>
 
 
-</header>
-
-
-
-
 
 <main
-
 style={{
-
 padding:30
-
 }}
-
 >
 
 {children}
@@ -190,14 +205,12 @@ padding:30
 </main>
 
 
-
 </div>
 
 
-
 </div>
 
+);
 
-)
 
 }

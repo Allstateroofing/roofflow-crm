@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import {useState} from "react";
+
 import {
 LayoutDashboard,
 Users,
@@ -8,12 +10,14 @@ Briefcase,
 FileText,
 UserRound,
 Settings,
-DollarSign
+DollarSign,
+Menu,
+X
 } from "lucide-react";
 
 
 export default function Sidebar(){
-
+const [open,setOpen]=useState(false);
 const menu=[
 
 {
@@ -63,6 +67,47 @@ icon:Settings
 
 return(
 
+<>
+<button
+
+onClick={()=>setOpen(!open)}
+
+style={{
+
+position:"fixed",
+top:15,
+left:15,
+zIndex:2000,
+background:"#111827",
+color:"#D4AF37",
+border:0,
+padding:10,
+borderRadius:8,
+
+display:
+typeof window !== "undefined" &&
+window.innerWidth < 768
+?
+"block"
+:
+"none"
+
+}}
+
+>
+
+{
+open ?
+
+<X size={24}/>
+
+:
+
+<Menu size={24}/>
+
+}
+
+</button>
 <aside
 
 style={{
@@ -74,7 +119,19 @@ color:"white",
 padding:"25px 20px",
 position:"fixed",
 left:0,
-top:0
+top:0,
+zIndex:1000,
+
+transform:
+typeof window !== "undefined" &&
+window.innerWidth < 768 &&
+!open
+?
+"translateX(-100%)"
+:
+"translateX(0)",
+
+transition:"0.3s"
 
 }}
 
@@ -127,7 +184,7 @@ fontWeight:800
 }}
 
 >
-RoofFlow
+All State Roofing
 </h2>
 
 <p
@@ -214,10 +271,9 @@ fontWeight:600
 
 </nav>
 
-
-
 </aside>
 
+</>
 
 )
 

@@ -13,183 +13,214 @@ const [results,setResults]=useState<any[]>([]);
 
 async function runSearch(){
 
-
 if(!search.trim()){
-
 setResults([]);
-
 return;
-
 }
-
 
 
 let data:any[]=[];
 
 
-
-// CLIENTS + ZIP + SALESMAN ID
+// GET CLIENTS
 
 const {data:clients,error:clientError}=await supabase
-
 .from("clients")
+.select("*");
 
-.select(`
-*,
-salesmen:salesman_id(
-name
-)
-`)
 
-.or(
-`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%,address.ilike.%${search}%,zip.ilike.%${search}%`
-);
+// GET SALESMEN
+
+const {data:salesmen,error:salesmanError}=await supabase
+.from("salesmen")
+.select("*");
+
 
 
 console.log("CLIENTS:",clients);
+console.log("SALESMEN:",salesmen);
 console.log("CLIENT ERROR:",clientError);
+console.log("SALESMAN ERROR:",salesmanError);
 
 
 
 if(clients){
 
-const filteredClients = clients.filter((x:any)=>{
+
+const filteredClients = clients.filter((c:any)=>{
+
+
+const salesman = salesmen?.find(
+(s:any)=>s.id === c.salesman_id
+);
+
 
 return (
 
-x.name?.toLowerCase().includes(search.toLowerCase()) ||
+c.name?.toLowerCase()
+.includes(search.toLowerCase()) ||
 
-x.phone?.includes(search) ||
+c.phone?.includes(search) ||
 
-x.email?.toLowerCase().includes(search.toLowerCase()) ||
+c.email?.toLowerCase()
+.includes(search.toLowerCase()) ||
 
-x.address?.toLowerCase().includes(search.toLowerCase()) ||
+c.address?.toLowerCase()
+.includes(search.toLowerCase()) ||
 
-x.zip?.includes(search) ||
+c.zip?.includes(search) ||
 
-x.salesmen?.name?.toLowerCase().includes(search.toLowerCase())
+salesman?.name?.toLowerCase()
+.includes(search.toLowerCase())
 
 );
+
 
 });
 
 
+
 data.push(
 
-...filteredClients.map((x:any)=>({
+...filteredClients.map((c:any)=>{
+
+
+const salesman = salesmen?.find(
+(s:any)=>s.id === c.salesman_id
+);
+
+
+return {
 
 type:"Client",
 
-name:x.name,
+name:c.name,
 
 info:
 `
-Phone: ${x.phone || ""}
-Email: ${x.email || ""}
-Address: ${x.address || ""}
-Zip: ${x.zip || ""}
-Salesman: ${x.salesmen?.name || x.salesmen?.[0]?.name || ""}
+Phone: ${c.phone || ""}
+Email: ${c.email || ""}
+Address: ${c.address || ""}
+Zip: ${c.zip || ""}
+Salesman: ${salesman?.name || ""}
 `
 
-}))
+};
+
+
+})
 
 );
+
 
 }
 
 
 
 
-// SALESMEN
 
-const {data:salesmen}=await supabase
-
-.from("salesmen")
-
-.select("*")
-
-.or(
-`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`
-);
-
+// SALESMAN SEARCH
 
 
 if(salesmen){
 
+
+const filteredSalesmen=salesmen.filter((s:any)=>{
+
+
+return (
+
+s.name?.toLowerCase()
+.includes(search.toLowerCase()) ||
+
+s.phone?.includes(search) ||
+
+s.email?.toLowerCase()
+.includes(search.toLowerCase())
+
+);
+
+
+});
+
+
+
 data.push(
 
-...salesmen.map((x:any)=>({
+...filteredSalesmen.map((s:any)=>({
 
 type:"Salesman",
 
-name:x.name,
+name:s.name,
 
 info:
 `
-Phone: ${x.phone || ""}
-Email: ${x.email || ""}
-Commission: ${x.commission_percent || ""}%
+Phone: ${s.phone || ""}
+Email: ${s.email || ""}
+Commission: ${s.commission_percent || ""}%
 `
 
 }))
 
+
 );
 
+
 }
+
 
 
 
 
 // JOBS
 
+
 const {data:jobs}=await supabase
-
 .from("jobs")
-
-.select(`
-*,
-clients(
-name,
-phone,
-address
-),
-salesmen(
-name
-)
-`)
-
-.or(
-`status.ilike.%${search}%,notes.ilike.%${search}%`
-);
+.select("*");
 
 
 
 if(jobs){
 
+
+const filteredJobs=jobs.filter((j:any)=>{
+
+
+return (
+
+j.status?.toLowerCase()
+.includes(search.toLowerCase()) ||
+
+j.notes?.toLowerCase()
+.includes(search.toLowerCase())
+
+);
+
+
+});
+
+
+
 data.push(
 
-...jobs.map((x:any)=>(
-
-{
+...filteredJobs.map((j:any)=>({
 
 type:"Job",
 
-name:x.clients?.name || "Job",
+name:"Job",
 
 info:
 `
-Status: ${x.status || ""}
-Client Phone: ${x.clients?.phone || ""}
-Address: ${x.clients?.address || ""}
-Salesman: ${x.salesmen?.name || ""}
-Notes: ${x.notes || ""}
+Status: ${j.status || ""}
+Notes: ${j.notes || ""}
 `
 
-}
+}))
 
-))
 
 );
+
 
 }
 
@@ -203,8 +234,7 @@ setResults(data);
 
 
 
-
-return(
+return (
 
 <div>
 
@@ -229,7 +259,8 @@ onChange={(e)=>setSearch(e.target.value)}
 
 onKeyDown={(e)=>{
 
-if(e.key==="Enter") runSearch();
+if(e.key==="Enter")
+runSearch();
 
 }}
 
@@ -238,13 +269,9 @@ placeholder="Search name, phone, zip, salesman, job..."
 style={{
 
 width:"100%",
-
 padding:15,
-
 border:"1px solid #ddd",
-
 borderRadius:10,
-
 fontSize:16
 
 }}
@@ -260,15 +287,10 @@ onClick={runSearch}
 style={{
 
 marginTop:15,
-
 padding:"12px 25px",
-
 background:"#D4AF37",
-
 border:"none",
-
 borderRadius:10,
-
 fontWeight:700
 
 }}
@@ -278,6 +300,7 @@ fontWeight:700
 Search
 
 </button>
+
 
 
 
@@ -295,13 +318,9 @@ key={i}
 style={{
 
 padding:20,
-
 background:"#fff",
-
 borderRadius:12,
-
 marginBottom:10,
-
 border:"1px solid #ddd"
 
 }}
@@ -310,7 +329,6 @@ border:"1px solid #ddd"
 
 
 <b>{r.type}</b>
-
 
 <h3>{r.name}</h3>
 
@@ -330,12 +348,13 @@ border:"1px solid #ddd"
 }
 
 
-</div>
-
 
 </div>
 
-)
+
+</div>
+
+);
 
 
 }

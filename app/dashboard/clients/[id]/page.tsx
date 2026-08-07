@@ -2,6 +2,7 @@
 
 import {useEffect,useState} from "react";
 import {useParams} from "next/navigation";
+import Link from "next/link";
 import {supabase} from "@/lib/supabase";
 
 
@@ -110,7 +111,7 @@ id,
 status,
 total_price,
 scheduled_date,
-salesmen(
+salesmen!jobs_salesman_id_fkey(
 name
 )
 `)
@@ -446,39 +447,264 @@ marginBottom:20
 <h2>
 Jobs
 </h2>
+<Link href={`/dashboard/jobs/new?client=${client.id}`}>
+<button
+style={{
+background:"#D4AF37",
+border:0,
+padding:"12px 20px",
+borderRadius:10,
+fontWeight:700,
+cursor:"pointer"
+}}
+>
++ Create Job
+</button>
+</Link>
+
+<div
+style={{
+marginTop:20,
+overflowX:"auto"
+}}
+>
+
+
+<table
+
+style={{
+
+width:"100%",
+borderCollapse:"collapse"
+
+}}
+
+>
+
+
+<thead>
+
+<tr
+style={{
+background:"#111827",
+color:"#D4AF37"
+}}
+>
+
+<th style={{padding:12}}>
+Status
+</th>
+
+<th style={{padding:12}}>
+Price
+</th>
+
+<th style={{padding:12}}>
+Salesman
+</th>
+
+<th style={{padding:12}}>
+Scheduled
+</th>
+
+<th style={{padding:12}}>
+Action
+</th>
+
+</tr>
+
+</thead>
+
+
+
+<tbody>
 
 
 {
 jobs.map(job=>(
 
-<div
+
+<tr
+
 key={job.id}
+
 style={{
-borderBottom:"1px solid #ddd",
-padding:15
+borderBottom:"1px solid #ddd"
 }}
+
 >
 
-<p>Status: {job.status}</p>
 
-<p>
-Price: ${Number(job.total_price).toLocaleString()}
-</p>
+<td style={{padding:12}}>
 
-<p>
-Salesman: {job.salesmen?.name || "-"}
-</p>
+<span
 
-<p>
-Date: {job.scheduled_date || "-"}
-</p>
+style={{
+
+background:"#FEF3C7",
+padding:"6px 12px",
+borderRadius:20,
+fontWeight:700
+
+}}
+
+>
+
+{job.status}
+
+</span>
 
 
-</div>
+</td>
+
+
+
+<td style={{padding:12,fontWeight:700}}>
+
+${Number(job.total_price || 0).toLocaleString()}
+
+</td>
+
+
+
+<td style={{padding:12}}>
+
+{job.salesmen?.name || "Not Assigned"}
+
+</td>
+
+
+
+<td style={{padding:12}}>
+
+{job.scheduled_date || "-"}
+
+</td>
+
+
+
+<td style={{padding:12}}>
+
+
+<Link href={`/dashboard/jobs/${job.id}`}>
+
+<button
+
+style={{
+
+background:"#111827",
+color:"white",
+border:0,
+padding:"8px 14px",
+borderRadius:8,
+fontWeight:700
+
+}}
+
+>
+
+View Job
+
+</button>
+
+
+</Link>
+
+
+
+{
+
+role==="admin" && (
+
+<button
+
+onClick={async()=>{
+
+
+const ok = confirm(
+"Are you sure you want to delete this job?"
+);
+
+
+if(!ok) return;
+
+
+
+const {error}=await supabase
+
+.from("jobs")
+
+.delete()
+
+.eq("id",job.id);
+
+
+
+if(error){
+
+alert(error.message);
+return;
+
+}
+
+
+
+load();
+
+
+}}
+
+
+style={{
+
+marginLeft:10,
+
+background:"#DC2626",
+
+color:"white",
+
+border:0,
+
+padding:"8px 14px",
+
+borderRadius:8,
+
+fontWeight:700,
+
+cursor:"pointer"
+
+}}
+
+>
+
+Delete
+
+</button>
+
+)
+
+}
+
+
+</td>
+
+
+</tr>
+
 
 ))
 
 }
+
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
 
 
 </div>

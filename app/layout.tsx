@@ -2,8 +2,16 @@ import "./globals.css";
 
 
 export const metadata = {
-  title:"RoofFlowCRM",
+  title:"All State Roofing",
   description:"Roofing Company CRM"
+};
+
+
+export const viewport = {
+  width:"device-width",
+  initialScale:1,
+  maximumScale:5,
+  userScalable:true
 };
 
 
