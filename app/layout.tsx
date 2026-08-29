@@ -26,7 +26,7 @@ return(
 
 <html lang="en">
 
-<body>
+<body style={{ fontFamily: "Inter, Arial, sans-serif" }}>
 
 {children}
 

@@ -107,9 +107,10 @@
     @apply border-border outline-ring/50;
   }
 
-  html {
-    @apply font-sans;
-  }
+  html,
+body {
+  font-family: Inter, Arial, sans-serif;
+}
 
   body {
     margin: 0;
