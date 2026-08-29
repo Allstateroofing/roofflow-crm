@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: "All State Roofing <notifications@allstateroofing.com>",
+      from: "All State Roofing <onboarding@resend.dev>",
       to: [to],
       subject,
       html: `
