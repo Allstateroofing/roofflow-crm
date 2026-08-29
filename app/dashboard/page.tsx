@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -303,115 +302,42 @@ export default function Dashboard() {
   ];
 
   return (
-    <div
-  style={{
-  padding: "25px",
-  width: "100%",
-  boxSizing: "border-box",
-  overflowX: "hidden",
-  background: "#F9FAFB",
-  minHeight: "100vh",
-  fontFamily: "Inter, sans-serif",
-}}
-    >
-      {/* PAGE HEADER */}
-      <div style={{ marginBottom: 30 }}>
-        <h1
-          style={{
-            fontSize: "38px",
-            fontWeight: 700,
-            color: "#0F172A",
-            letterSpacing: "-1px",
-            margin: 0,
-          }}
-        >
-          Dashboard Overview
-        </h1>
+    <div className="dashboard-page">
 
-        <p
-          style={{
-            color: "#6B7280",
-            marginTop: 7,
-            fontSize: 16,
-            fontWeight: 500,
-          }}
-        >
-          Monitor your roofing projects, clients and company
-          activity.
+      {/* PAGE HEADER */}
+      <div className="page-header">
+        <h1>Dashboard Overview</h1>
+
+        <p>
+          Monitor your roofing projects, clients and company activity.
         </p>
       </div>
 
       {/* WELCOME */}
-      <div
-        style={{
-          background: "#111827",
-          color: "white",
-          padding: "25px 30px",
-          borderRadius: 20,
-          marginBottom: 35,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
-        }}
-      >
+      <div className="welcome-box">
         <div>
-          <h2
-            style={{
-              fontSize: 26,
-              fontWeight: 900,
-              marginBottom: 8,
-            }}
-          >
-            Welcome back 👋
-          </h2>
+          <h2>Welcome back 👋</h2>
 
-          <p
-            style={{
-              color: "#CBD5E1",
-              fontSize: 16,
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            Manage your roofing projects, clients and company
-            activity from one place.
+          <p>
+            Manage your roofing projects, clients and company activity
+            from one place.
           </p>
         </div>
 
-        <div
-          style={{
-            fontSize: 55,
-          }}
-        >
+        <div className="welcome-icon">
           🏠
         </div>
       </div>
 
       {/* CARDS */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(220px,1fr))",
-          gap: 20,
-        }}
-      >
+      <div className="cards-grid">
         {cards.map((card: any) => {
           const Icon = card.icon;
 
           return (
             <Card
               key={card.title}
-              style={{
-                borderRadius: 16,
-                border: "1px solid #E5E7EB",
-                boxShadow:
-                  "0 8px 25px rgba(0,0,0,0.05)",
-                background: "#FFFFFF",
-                overflow: "hidden",
-                position: "relative",
-              }}
+              className="dashboard-card"
             >
               <div
                 style={{
@@ -421,33 +347,15 @@ export default function Dashboard() {
               />
 
               <CardHeader>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <CardTitle
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 600,
-                      color: "#111827",
-                    }}
-                  >
+                <div className="card-header-row">
+                  <CardTitle className="card-title">
                     {card.title}
                   </CardTitle>
 
                   <div
+                    className="card-icon"
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
                       background: card.color,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
                     }}
                   >
                     <Icon size={20} />
@@ -456,14 +364,7 @@ export default function Dashboard() {
               </CardHeader>
 
               <CardContent>
-                <h2
-                  style={{
-                    fontSize: 30,
-                    fontWeight: 800,
-                    color: "#111827",
-                    margin: 0,
-                  }}
-                >
+                <h2 className="card-value">
                   {card.title === "Jobs"
                     ? Number(card.value || 0)
                     : "$" +
@@ -478,42 +379,24 @@ export default function Dashboard() {
       </div>
 
       {/* JOBS OVERVIEW */}
-      <h2
-        style={{
-          marginTop: 40,
-          fontSize: 24,
-          fontWeight: 800,
-          color: "#111827",
-        }}
-      >
+      <h2 className="section-title">
         Jobs Overview
       </h2>
 
-      <div
-        style={{
-          width: "100%",
-          height: 320,
-          marginTop: 20,
-          background: "#FFFFFF",
-          borderRadius: 16,
-          padding: 20,
-          boxSizing: "border-box",
-          boxShadow:
-            "0 8px 25px rgba(0,0,0,0.05)",
-          border: "1px solid #E5E7EB",
-        }}
-      >
+      <div className="chart-box">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data.chart}>
             <XAxis
               dataKey="name"
               axisLine={false}
               tickLine={false}
+              fontSize={12}
             />
 
             <YAxis
               axisLine={false}
               tickLine={false}
+              fontSize={12}
             />
 
             <Tooltip
@@ -532,142 +415,47 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
-      <hr
-        style={{
-          marginTop: 40,
-          border: 0,
-          borderTop: "1px solid #E5E7EB",
-        }}
-      />
-
       {/* RECENT JOBS */}
-      <h2
-        style={{
-          marginTop: 40,
-          fontSize: 24,
-          fontWeight: 800,
-          color: "#111827",
-        }}
-      >
+      <h2 className="section-title">
         Recent Jobs
       </h2>
 
-      <div
-        style={{
-          background: "#FFFFFF",
-          borderRadius: 16,
-          padding: 20,
-          boxShadow:
-            "0 8px 25px rgba(0,0,0,0.05)",
-          border: "1px solid #E5E7EB",
-          overflowX: "auto",
-        }}
-      >
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            minWidth: 650,
-          }}
-        >
+      <div className="table-box">
+        <table className="dashboard-table">
           <thead>
-            <tr
-              style={{
-                background: "#111827",
-                color: "#D4AF37",
-              }}
-            >
-              <th
-                style={{
-                  padding: 14,
-                  textAlign: "left",
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                Client
-              </th>
-
-              <th
-                style={{
-                  padding: 14,
-                  textAlign: "left",
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                Status
-              </th>
+            <tr>
+              <th>Client</th>
+              <th>Status</th>
 
               {canSeeFinances && (
-                <th
-                  style={{
-                    padding: 14,
-                    textAlign: "left",
-                    fontSize: 14,
-                    fontWeight: 800,
-                  }}
-                >
-                  Price
-                </th>
+                <th>Price</th>
               )}
 
-              <th
-                style={{
-                  padding: 14,
-                  textAlign: "left",
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                Date
-              </th>
+              <th>Date</th>
             </tr>
           </thead>
 
           <tbody>
             {data.recentJobs.map((job: any) => (
-              <tr
-                key={job.id}
-                style={{
-                  borderBottom:
-                    "1px solid #E5E7EB",
-                }}
-              >
-                <td
-                  style={{
-                    padding: 14,
-                    fontWeight: 800,
-                    color: "#111827",
-                    fontSize: 15,
-                  }}
-                >
+              <tr key={job.id}>
+                <td className="strong-cell">
                   {job.clients?.name || "-"}
                 </td>
 
-                <td
-                  style={{
-                    padding: 14,
-                  }}
-                >
+                <td>
                   <span
+                    className="status-badge"
                     style={{
-                      padding: "6px 12px",
-                      borderRadius: 20,
-                      fontSize: 13,
-                      fontWeight: 700,
                       background:
                         job.status === "done"
                           ? "#DCFCE7"
-                          : job.status ===
-                            "in_progress"
+                          : job.status === "in_progress"
                           ? "#DBEAFE"
                           : "#FEF3C7",
                       color:
                         job.status === "done"
                           ? "#166534"
-                          : job.status ===
-                            "in_progress"
+                          : job.status === "in_progress"
                           ? "#1D4ED8"
                           : "#92400E",
                     }}
@@ -677,14 +465,7 @@ export default function Dashboard() {
                 </td>
 
                 {canSeeFinances && (
-                  <td
-                    style={{
-                      padding: 14,
-                      fontWeight: 800,
-                      color: "#111827",
-                      fontSize: 15,
-                    }}
-                  >
+                  <td className="strong-cell">
                     $
                     {Number(
                       job.total_price || 0
@@ -692,14 +473,7 @@ export default function Dashboard() {
                   </td>
                 )}
 
-                <td
-                  style={{
-                    padding: 14,
-                    color: "#6B7280",
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
+                <td className="date-cell">
                   {job.created_at
                     ? new Date(
                         job.created_at
@@ -713,13 +487,7 @@ export default function Dashboard() {
               <tr>
                 <td
                   colSpan={canSeeFinances ? 4 : 3}
-                  style={{
-                    padding: 25,
-                    textAlign: "center",
-                    color: "#6B7280",
-                    fontSize: 15,
-                    fontWeight: 600,
-                  }}
+                  className="empty-cell"
                 >
                   No jobs found.
                 </td>
@@ -732,152 +500,44 @@ export default function Dashboard() {
       {/* SALESMAN PERFORMANCE */}
       {canSeeSalesmanPerformance && (
         <>
-          <hr
-            style={{
-              marginTop: 40,
-              border: 0,
-              borderTop: "1px solid #E5E7EB",
-            }}
-          />
-
-          <h2
-            style={{
-              marginTop: 40,
-              fontSize: 24,
-              fontWeight: 800,
-              color: "#111827",
-            }}
-          >
+          <h2 className="section-title">
             Salesman Performance
           </h2>
 
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 16,
-              padding: 20,
-              boxShadow:
-                "0 8px 25px rgba(0,0,0,0.05)",
-              border: "1px solid #E5E7EB",
-              overflowX: "auto",
-            }}
-          >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                minWidth: 650,
-              }}
-            >
+          <div className="table-box">
+            <table className="dashboard-table salesman-table">
               <thead>
-                <tr
-                  style={{
-                    background: "#111827",
-                    color: "#D4AF37",
-                  }}
-                >
-                  <th
-                    style={{
-                      padding: 14,
-                      textAlign: "left",
-                      fontSize: 14,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Salesman
-                  </th>
-
-                  <th
-                    style={{
-                      padding: 14,
-                      textAlign: "left",
-                      fontSize: 14,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Sales
-                  </th>
-
-                  <th
-                    style={{
-                      padding: 14,
-                      textAlign: "left",
-                      fontSize: 14,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Profit
-                  </th>
-
-                  <th
-                    style={{
-                      padding: 14,
-                      textAlign: "left",
-                      fontSize: 14,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Commission
-                  </th>
+                <tr>
+                  <th>Salesman</th>
+                  <th>Sales</th>
+                  <th>Profit</th>
+                  <th>Commission</th>
                 </tr>
               </thead>
 
               <tbody>
                 {data.salesmanReport.map(
                   (s: any) => (
-                    <tr
-                      key={s.name}
-                      style={{
-                        borderBottom:
-                          "1px solid #E5E7EB",
-                      }}
-                    >
-                      <td
-                        style={{
-                          padding: 14,
-                          fontWeight: 700,
-                          color: "#111827",
-                          fontSize: 15,
-                        }}
-                      >
+                    <tr key={s.name}>
+                      <td className="strong-cell">
                         {s.name}
                       </td>
 
-                      <td
-                        style={{
-                          padding: 14,
-                          fontWeight: 800,
-                          fontSize: 15,
-                        }}
-                      >
+                      <td className="strong-cell">
                         $
                         {Number(
                           s.sales
                         ).toLocaleString()}
                       </td>
 
-                      <td
-                        style={{
-                          padding: 14,
-                          color: "#16A34A",
-                          fontWeight: 800,
-                          fontSize: 15,
-                        }}
-                      >
+                      <td className="profit-cell">
                         $
                         {Number(
                           s.profit
                         ).toLocaleString()}
                       </td>
 
-                      <td
-                        style={{
-                          padding: 14,
-                          color: "#7C3AED",
-                          fontWeight: 800,
-                          fontSize: 15,
-                        }}
-                      >
+                      <td className="commission-cell">
                         $
                         {Number(
                           s.commission
@@ -887,18 +547,11 @@ export default function Dashboard() {
                   )
                 )}
 
-                {data.salesmanReport.length ===
-                  0 && (
+                {data.salesmanReport.length === 0 && (
                   <tr>
                     <td
                       colSpan={4}
-                      style={{
-                        padding: 25,
-                        textAlign: "center",
-                        color: "#6B7280",
-                        fontSize: 15,
-                        fontWeight: 600,
-                      }}
+                      className="empty-cell"
                     >
                       No salesman data found.
                     </td>
@@ -913,119 +566,42 @@ export default function Dashboard() {
       {/* RECENT PAYMENTS */}
       {canSeeFinances && (
         <>
-          <hr
-            style={{
-              marginTop: 40,
-              border: 0,
-              borderTop: "1px solid #E5E7EB",
-            }}
-          />
-
-          <h2
-            style={{
-              marginTop: 40,
-              fontSize: 24,
-              fontWeight: 800,
-              color: "#111827",
-            }}
-          >
+          <h2 className="section-title">
             Recent Payments
           </h2>
 
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: 16,
-              padding: 20,
-              boxShadow:
-                "0 8px 25px rgba(0,0,0,0.05)",
-              border: "1px solid #E5E7EB",
-              overflowX: "auto",
-            }}
-          >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                minWidth: 500,
-              }}
-            >
+          <div className="table-box">
+            <table className="dashboard-table payments-table">
               <thead>
-                <tr
-                  style={{
-                    background: "#111827",
-                    color: "#D4AF37",
-                  }}
-                >
-                  <th
-                    style={{
-                      padding: 14,
-                      textAlign: "left",
-                      fontSize: 14,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Amount
-                  </th>
-
-                  <th
-                    style={{
-                      padding: 14,
-                      textAlign: "left",
-                      fontSize: 14,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Status
-                  </th>
+                <tr>
+                  <th>Amount</th>
+                  <th>Status</th>
                 </tr>
               </thead>
 
               <tbody>
                 {data.recentPayments.map(
                   (p: any) => (
-                    <tr
-                      key={p.id}
-                      style={{
-                        borderBottom:
-                          "1px solid #E5E7EB",
-                      }}
-                    >
-                      <td
-                        style={{
-                          padding: 14,
-                          fontWeight: 800,
-                          fontSize: 15,
-                        }}
-                      >
+                    <tr key={p.id}>
+                      <td className="strong-cell">
                         $
                         {Number(
                           p.amount || 0
                         ).toLocaleString()}
                       </td>
 
-                      <td
-                        style={{
-                          padding: 14,
-                        }}
-                      >
+                      <td>
                         <span
+                          className="status-badge"
                           style={{
-                            padding:
-                              "6px 12px",
-                            borderRadius: 20,
                             background:
-                              p.status ===
-                              "paid"
+                              p.status === "paid"
                                 ? "#DCFCE7"
                                 : "#FEF3C7",
                             color:
-                              p.status ===
-                              "paid"
+                              p.status === "paid"
                                 ? "#166534"
                                 : "#92400E",
-                            fontSize: 13,
-                            fontWeight: 700,
                           }}
                         >
                           {p.status}
@@ -1035,18 +611,11 @@ export default function Dashboard() {
                   )
                 )}
 
-                {data.recentPayments.length ===
-                  0 && (
+                {data.recentPayments.length === 0 && (
                   <tr>
                     <td
                       colSpan={2}
-                      style={{
-                        padding: 25,
-                        textAlign: "center",
-                        color: "#6B7280",
-                        fontSize: 15,
-                        fontWeight: 600,
-                      }}
+                      className="empty-cell"
                     >
                       No payments found.
                     </td>
@@ -1057,6 +626,358 @@ export default function Dashboard() {
           </div>
         </>
       )}
+
+      <style>{`
+
+        * {
+          box-sizing: border-box;
+        }
+
+        .dashboard-page {
+          width: 100%;
+          min-height: 100vh;
+          padding: 25px;
+          background: #F9FAFB;
+          overflow-x: hidden;
+          font-family: Inter, Arial, sans-serif;
+        }
+
+        .page-header {
+          margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+          font-size: 38px;
+          font-weight: 700;
+          color: #0F172A;
+          letter-spacing: -1px;
+          margin: 0;
+        }
+
+        .page-header p {
+          color: #6B7280;
+          margin-top: 7px;
+          font-size: 16px;
+          font-weight: 500;
+        }
+
+        .welcome-box {
+          background: #111827;
+          color: white;
+          padding: 25px 30px;
+          border-radius: 20px;
+          margin-bottom: 35px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .welcome-box h2 {
+          font-size: 26px;
+          font-weight: 900;
+          margin: 0 0 8px 0;
+        }
+
+        .welcome-box p {
+          color: #CBD5E1;
+          font-size: 16px;
+          font-weight: 500;
+          margin: 0;
+        }
+
+        .welcome-icon {
+          font-size: 55px;
+        }
+
+        .cards-grid {
+          display: grid;
+          grid-template-columns: repeat(
+            auto-fit,
+            minmax(220px, 1fr)
+          );
+          gap: 20px;
+        }
+
+        .dashboard-card {
+          border-radius: 16px;
+          border: 1px solid #E5E7EB;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+          background: white;
+          overflow: hidden;
+        }
+
+        .card-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .card-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: #111827;
+        }
+
+        .card-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          flex-shrink: 0;
+        }
+
+        .card-value {
+          font-size: 30px;
+          font-weight: 800;
+          color: #111827;
+          margin: 0;
+        }
+
+        .section-title {
+          margin-top: 40px;
+          margin-bottom: 20px;
+          font-size: 24px;
+          font-weight: 800;
+          color: #111827;
+        }
+
+        .chart-box {
+          width: 100%;
+          height: 320px;
+          background: white;
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+          border: 1px solid #E5E7EB;
+        }
+
+        .table-box {
+          width: 100%;
+          background: white;
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+          border: 1px solid #E5E7EB;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .dashboard-table {
+          width: 100%;
+          border-collapse: collapse;
+          min-width: 600px;
+        }
+
+        .dashboard-table th {
+          padding: 14px;
+          text-align: left;
+          font-size: 14px;
+          font-weight: 800;
+          background: #111827;
+          color: #D4AF37;
+          white-space: nowrap;
+        }
+
+        .dashboard-table td {
+          padding: 14px;
+          border-bottom: 1px solid #E5E7EB;
+          white-space: nowrap;
+        }
+
+        .strong-cell {
+          font-weight: 800;
+          color: #111827;
+          font-size: 15px;
+        }
+
+        .date-cell {
+          color: #6B7280;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .status-badge {
+          display: inline-block;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 13px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+
+        .profit-cell {
+          padding: 14px;
+          color: #16A34A;
+          font-weight: 800;
+          font-size: 15px;
+        }
+
+        .commission-cell {
+          padding: 14px;
+          color: #7C3AED;
+          font-weight: 800;
+          font-size: 15px;
+        }
+
+        .empty-cell {
+          padding: 25px !important;
+          text-align: center !important;
+          color: #6B7280;
+          font-size: 15px;
+          font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+
+          .dashboard-page {
+            padding: 80px 12px 25px 12px;
+            width: 100%;
+          }
+
+          .page-header {
+            margin-bottom: 20px;
+          }
+
+          .page-header h1 {
+            font-size: 28px;
+            letter-spacing: -0.5px;
+          }
+
+          .page-header p {
+            font-size: 14px;
+            line-height: 1.5;
+          }
+
+          .welcome-box {
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 22px;
+          }
+
+          .welcome-box h2 {
+            font-size: 21px;
+          }
+
+          .welcome-box p {
+            font-size: 14px;
+            line-height: 1.45;
+            max-width: 250px;
+          }
+
+          .welcome-icon {
+            font-size: 40px;
+            margin-left: 10px;
+          }
+
+          .cards-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+          }
+
+          .dashboard-card {
+            min-width: 0;
+            border-radius: 13px;
+          }
+
+          .dashboard-card .card-header {
+            padding: 12px;
+          }
+
+          .dashboard-card .card-content {
+            padding: 0 12px 15px 12px;
+          }
+
+          .card-title {
+            font-size: 14px;
+          }
+
+          .card-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+          }
+
+          .card-icon svg {
+            width: 17px;
+            height: 17px;
+          }
+
+          .card-value {
+            font-size: 22px;
+            overflow-wrap: anywhere;
+          }
+
+          .section-title {
+            margin-top: 28px;
+            margin-bottom: 14px;
+            font-size: 20px;
+          }
+
+          .chart-box {
+            height: 260px;
+            padding: 10px;
+            border-radius: 14px;
+          }
+
+          .table-box {
+            padding: 8px;
+            border-radius: 14px;
+            width: 100%;
+          }
+
+          .dashboard-table {
+            min-width: 560px;
+          }
+
+          .dashboard-table th,
+          .dashboard-table td {
+            padding: 11px 10px;
+            font-size: 13px;
+          }
+
+          .salesman-table {
+            min-width: 620px;
+          }
+
+          .payments-table {
+            min-width: 400px;
+          }
+        }
+
+        @media (max-width: 380px) {
+
+          .dashboard-page {
+            padding-left: 8px;
+            padding-right: 8px;
+          }
+
+          .cards-grid {
+            gap: 7px;
+          }
+
+          .card-title {
+            font-size: 13px;
+          }
+
+          .card-value {
+            font-size: 19px;
+          }
+
+          .welcome-box {
+            padding: 16px;
+          }
+
+          .welcome-icon {
+            font-size: 32px;
+          }
+        }
+
+      `}</style>
     </div>
   );
 }

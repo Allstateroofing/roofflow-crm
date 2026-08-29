@@ -30,92 +30,52 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* MOBILE BUTTON */}
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          position: "fixed",
-          top: 15,
-          left: 15,
-          zIndex: 99999,
-          width: 45,
-          height: 45,
-          border: "none",
-          borderRadius: 10,
-          background: "#111827",
-          color: "white",
-          fontSize: 24,
-        }}
-        className="sidebar-mobile-button"
-      >
-        {open ? "✕" : "☰"}
-      </button>
+      {/* MOBILE HEADER */}
+      <div className="mobile-header">
+        <button
+          onClick={() => setOpen(true)}
+          className="mobile-menu-button"
+          aria-label="Open menu"
+        >
+          ☰
+        </button>
+
+        <div className="mobile-title">
+          All State Roofing
+        </div>
+      </div>
+
+      {/* MOBILE OVERLAY */}
+      {open && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
       {/* SIDEBAR */}
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: 270,
-          background: "#111827",
-          zIndex: 99998,
-          color: "white",
-          overflowY: "auto",
-          boxSizing: "border-box",
-          transform: open
-            ? "translateX(0)"
-            : undefined,
-        }}
-        className="main-sidebar"
-      >
+      <aside className={`main-sidebar ${open ? "mobile-open" : ""}`}>
+
         {/* LOGO */}
-        <div
-          style={{
-            padding: "25px 20px",
-            borderBottom: "1px solid #374151",
-          }}
-        >
+        <div className="sidebar-header">
+
           <img
             src="/logo.png"
             alt="All State Roofing"
-            style={{
-              width: 70,
-              height: 70,
-              objectFit: "contain",
-              display: "block",
-              marginBottom: 12,
-            }}
+            className="sidebar-logo"
           />
 
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 800,
-              color: "#ffffff",
-            }}
-          >
+          <div className="sidebar-company">
             All State Roofing
           </div>
 
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 13,
-              color: "#9CA3AF",
-            }}
-          >
+          <div className="sidebar-subtitle">
             Roofing & Chimney Management
           </div>
         </div>
 
         {/* MENU */}
-        <div
-          style={{
-            padding: "18px 10px",
-          }}
-        >
+        <nav className="sidebar-menu">
           {menu.map((item) => {
             const icon = item[0];
             const name = item[1];
@@ -131,34 +91,11 @@ export default function Sidebar() {
                 key={href}
                 href={href}
                 onClick={() => setOpen(false)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  height: 52,
-                  width: "100%",
-                  padding: "0 15px",
-                  marginBottom: 8,
-                  borderRadius: 12,
-                  boxSizing: "border-box",
-                  textDecoration: "none",
-                  background: active
-                    ? "#D4AF37"
-                    : "#1F2937",
-                  color: active
-                    ? "#111827"
-                    : "#ffffff",
-                  fontSize: 16,
-                  fontWeight: 700,
-                }}
+                className={`sidebar-link ${
+                  active ? "sidebar-link-active" : ""
+                }`}
               >
-                <span
-                  style={{
-                    width: 28,
-                    textAlign: "center",
-                    fontSize: 19,
-                  }}
-                >
+                <span className="sidebar-icon">
                   {icon}
                 </span>
 
@@ -166,59 +103,190 @@ export default function Sidebar() {
               </Link>
             );
           })}
-        </div>
+        </nav>
 
         {/* LOGOUT */}
-        <div
-          style={{
-            borderTop: "1px solid #374151",
-            padding: "18px 20px",
-            marginTop: 10,
-          }}
-        >
+        <div className="sidebar-logout">
           <button
             onClick={logout}
-            style={{
-              width: "100%",
-              border: "none",
-              background: "transparent",
-              color: "#EF4444",
-              textAlign: "left",
-              fontSize: 16,
-              fontWeight: 700,
-              cursor: "pointer",
-              padding: 10,
-            }}
+            className="logout-button"
           >
             🚪 Logout
           </button>
         </div>
-      </div>
+      </aside>
 
-      {/* MOBILE CSS */}
       <style>{`
+
+        /* =========================
+           DESKTOP
+        ========================= */
+
         .main-sidebar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: 270px;
+          background: #111827;
+          color: white;
+          z-index: 99998;
+          overflow-y: auto;
+          box-sizing: border-box;
           transition: transform 0.25s ease;
         }
 
-        .sidebar-mobile-button {
+        .sidebar-header {
+          padding: 25px 20px;
+          border-bottom: 1px solid #374151;
+        }
+
+        .sidebar-logo {
+          width: 70px;
+          height: 70px;
+          object-fit: contain;
+          display: block;
+          margin-bottom: 12px;
+        }
+
+        .sidebar-company {
+          font-size: 22px;
+          font-weight: 800;
+          color: white;
+        }
+
+        .sidebar-subtitle {
+          margin-top: 6px;
+          font-size: 13px;
+          color: #9ca3af;
+        }
+
+        .sidebar-menu {
+          padding: 18px 10px;
+        }
+
+        .sidebar-link {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          height: 52px;
+          width: 100%;
+          padding: 0 15px;
+          margin-bottom: 8px;
+          border-radius: 12px;
+          box-sizing: border-box;
+          text-decoration: none;
+          background: #1f2937;
+          color: white;
+          font-size: 16px;
+          font-weight: 700;
+          transition: 0.15s ease;
+        }
+
+        .sidebar-link:hover {
+          background: #374151;
+        }
+
+        .sidebar-link-active {
+          background: #d4af37 !important;
+          color: #111827 !important;
+        }
+
+        .sidebar-icon {
+          width: 28px;
+          min-width: 28px;
+          text-align: center;
+          font-size: 19px;
+        }
+
+        .sidebar-logout {
+          border-top: 1px solid #374151;
+          padding: 18px 20px;
+          margin-top: 10px;
+        }
+
+        .logout-button {
+          width: 100%;
+          border: none;
+          background: transparent;
+          color: #ef4444;
+          text-align: left;
+          font-size: 16px;
+          font-weight: 700;
+          cursor: pointer;
+          padding: 10px;
+        }
+
+        .mobile-header {
           display: none;
         }
 
+        .sidebar-overlay {
+          display: none;
+        }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
+
         @media (max-width: 768px) {
+
+          .mobile-header {
+            position: fixed;
+            display: flex;
+            align-items: center;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: #111827;
+            z-index: 99990;
+            padding: 0 14px;
+            box-sizing: border-box;
+          }
+
+          .mobile-menu-button {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 10px;
+            background: #1f2937;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+          }
+
+          .mobile-title {
+            margin-left: 14px;
+            color: white;
+            font-size: 18px;
+            font-weight: 800;
+          }
+
           .main-sidebar {
+            width: 280px;
             transform: translateX(-100%);
-            width: 280px !important;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.35);
           }
 
-          .main-sidebar[style*="translateX(0)"] {
-            transform: translateX(0) !important;
+          .main-sidebar.mobile-open {
+            transform: translateX(0);
           }
 
-          .sidebar-mobile-button {
-            display: block !important;
+          .sidebar-overlay {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 99997;
+          }
+
+          .sidebar-header {
+            padding-top: 80px;
           }
         }
+
       `}</style>
     </>
   );
