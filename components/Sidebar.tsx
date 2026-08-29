@@ -21,22 +21,20 @@ export default function Sidebar() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
     const { data, error } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .maybeSingle();
+      .single();
 
     if (error) {
-      console.log("SIDEBAR ROLE ERROR:", error);
+      console.log("SIDEBAR PROFILE ERROR:", error);
       return;
     }
 
-    if (data?.role) {
+    if (data) {
       setRole(data.role);
     }
   }
@@ -46,60 +44,58 @@ export default function Sidebar() {
     router.replace("/auth/login");
   }
 
-  const adminMenu = [
-    ["🏠", "Dashboard", "/dashboard"],
-    ["🔎", "Search", "/dashboard/search"],
-    ["👥", "Clients", "/dashboard/clients"],
-    ["📑", "Estimates", "/dashboard/estimates"],
-    ["🧾", "Invoices", "/dashboard/invoices"],
-    ["🏗️", "Jobs", "/dashboard/jobs"],
-    ["💵", "Payments", "/dashboard/payments"],
-    ["📊", "Reports", "/dashboard/reports"],
-    ["👨‍💼", "Salesmen", "/dashboard/salesmen"],
-    ["👤", "Users", "/dashboard/users"],
-  ];
+  let menu: any[] = [];
 
-  const secretaryMenu = [
-    ["🏠", "Dashboard", "/dashboard"],
-    ["🔎", "Search", "/dashboard/search"],
-    ["👥", "Clients", "/dashboard/clients"],
-    ["📑", "Estimates", "/dashboard/estimates"],
-    ["🧾", "Invoices", "/dashboard/invoices"],
-    ["🏗️", "Jobs", "/dashboard/jobs"],
-  ];
-
-  const salesmanMenu = [
-    ["🏠", "Dashboard", "/dashboard"],
-    ["🔎", "Search", "/dashboard/search"],
-    ["👥", "My Clients", "/dashboard/clients"],
-    ["📑", "My Estimates", "/dashboard/estimates"],
-    ["🏗️", "My Jobs", "/dashboard/jobs"],
-  ];
-
-  const workerMenu = [
-    ["🏠", "Dashboard", "/dashboard"],
-    ["🏗️", "My Jobs", "/dashboard/jobs"],
-  ];
-
-  let menu = adminMenu;
+  if (role === "admin") {
+    menu = [
+      ["🏠", "Dashboard", "/dashboard"],
+      ["🔎", "Search", "/dashboard/search"],
+      ["👥", "Clients", "/dashboard/clients"],
+      ["📑", "Estimates", "/dashboard/estimates"],
+      ["🧾", "Invoices", "/dashboard/invoices"],
+      ["🏗️", "Jobs", "/dashboard/jobs"],
+      ["💵", "Payments", "/dashboard/payments"],
+      ["📊", "Reports", "/dashboard/reports"],
+      ["👨‍💼", "Salesmen", "/dashboard/salesmen"],
+      ["👤", "Users", "/dashboard/users"],
+    ];
+  }
 
   if (role === "secretary") {
-    menu = secretaryMenu;
+    menu = [
+      ["🏠", "Dashboard", "/dashboard"],
+      ["🔎", "Search", "/dashboard/search"],
+      ["👥", "Clients", "/dashboard/clients"],
+      ["📑", "Estimates", "/dashboard/estimates"],
+      ["🧾", "Invoices", "/dashboard/invoices"],
+      ["🏗️", "Jobs", "/dashboard/jobs"],
+    ];
   }
 
   if (role === "salesman") {
-    menu = salesmanMenu;
+    menu = [
+      ["🏠", "Dashboard", "/dashboard"],
+      ["🔎", "Search", "/dashboard/search"],
+      ["👥", "My Clients", "/dashboard/clients"],
+      ["📑", "My Estimates", "/dashboard/estimates"],
+      ["🏗️", "My Jobs", "/dashboard/jobs"],
+    ];
   }
 
   if (role === "worker") {
-    menu = workerMenu;
+    menu = [
+      ["🏠", "Dashboard", "/dashboard"],
+      ["🏗️", "My Jobs", "/dashboard/jobs"],
+    ];
   }
 
   return (
     <>
-      {/* MOBILE MENU BUTTON */}
+      {/* MOBILE HAMBURGER */}
       <button
-        onClick={() => setOpen(!open)}
+        className="mobile-menu-button"
+        onClick={() => setOpen((value) => !value)}
+        aria-label="Open menu"
         style={{
           position: "fixed",
           top: 15,
@@ -111,18 +107,21 @@ export default function Sidebar() {
           border: "none",
           background: "#111827",
           color: "#ffffff",
-          fontSize: 24,
+          fontSize: 25,
           cursor: "pointer",
           display: "none",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
         }}
-        className="mobile-menu-button"
       >
-        ☰
+        {open ? "✕" : "☰"}
       </button>
 
       {/* MOBILE OVERLAY */}
       {open && (
         <div
+          className="mobile-sidebar-overlay"
           onClick={() => setOpen(false)}
           style={{
             position: "fixed",
@@ -130,53 +129,54 @@ export default function Sidebar() {
             background: "rgba(0,0,0,0.45)",
             zIndex: 9998,
           }}
-          className="mobile-overlay"
         />
       )}
 
       {/* SIDEBAR */}
       <aside
+        className={`crm-sidebar ${open ? "sidebar-open" : ""}`}
         style={{
-          width: 270,
-          background: "#111827",
-          color: "#ffffff",
           position: "fixed",
           left: 0,
           top: 0,
           bottom: 0,
+          width: 270,
+          background: "#111827",
+          color: "#ffffff",
           zIndex: 10000,
           display: "flex",
           flexDirection: "column",
-          boxShadow: "4px 0 20px rgba(0,0,0,0.15)",
+          boxSizing: "border-box",
+          boxShadow: "4px 0 20px rgba(0,0,0,0.12)",
         }}
-        className={open ? "sidebar-open" : ""}
       >
         {/* LOGO */}
         <div
           style={{
-            padding: 25,
+            padding: "28px 20px 22px",
             borderBottom: "1px solid #374151",
+            flexShrink: 0,
           }}
         >
           <img
             src="/logo.png"
             alt="All State Roofing"
             style={{
-              width: 60,
-              height: 60,
+              width: 65,
+              height: 65,
               objectFit: "contain",
-              borderRadius: 12,
               display: "block",
+              marginBottom: 15,
             }}
           />
 
           <h2
             style={{
-              marginTop: 15,
-              marginBottom: 5,
-              fontSize: 20,
+              margin: 0,
+              fontSize: 23,
               fontWeight: 800,
               color: "#ffffff",
+              letterSpacing: "-0.4px",
             }}
           >
             All State Roofing
@@ -184,10 +184,11 @@ export default function Sidebar() {
 
           <p
             style={{
+              margin: "7px 0 0",
               color: "#9CA3AF",
-              margin: 0,
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 500,
+              lineHeight: 1.4,
             }}
           >
             Roofing & Chimney Management
@@ -195,76 +196,81 @@ export default function Sidebar() {
         </div>
 
         {/* MENU */}
-        <div
+        <nav
           style={{
             flex: 1,
-            padding: 15,
+            padding: "18px 10px",
             overflowY: "auto",
+            overflowX: "hidden",
           }}
         >
           {menu.map((item) => {
-            const icon = item[0];
-            const title = item[1];
-            const href = item[2];
-
             const active =
-              pathname === href ||
-              (href !== "/dashboard" &&
-                pathname.startsWith(href));
+              pathname === item[2] ||
+              (item[2] !== "/dashboard" &&
+                pathname.startsWith(item[2] + "/"));
 
             return (
               <Link
-                key={href}
-                href={href}
+                key={item[2]}
+                href={item[2]}
                 onClick={() => setOpen(false)}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 14,
-                  padding: "14px 16px",
+                  width: "100%",
+                  minHeight: 52,
+                  padding: "0 16px",
                   marginBottom: 8,
-                  borderRadius: 12,
+                  borderRadius: 13,
+                  boxSizing: "border-box",
                   textDecoration: "none",
                   background: active ? "#D4AF37" : "#1F2937",
                   color: active ? "#111827" : "#ffffff",
+                  fontSize: 16,
                   fontWeight: 700,
-                  fontSize: 15,
-                  transition: "all 0.2s ease",
+                  transition: "all 0.15s ease",
                 }}
               >
                 <span
                   style={{
                     width: 25,
                     textAlign: "center",
-                    fontSize: 18,
+                    fontSize: 19,
+                    flexShrink: 0,
                   }}
                 >
-                  {icon}
+                  {item[0]}
                 </span>
 
-                <span>{title}</span>
+                <span>{item[1]}</span>
               </Link>
             );
           })}
-        </div>
+        </nav>
 
         {/* LOGOUT */}
         <div
           style={{
-            padding: 20,
+            padding: "17px 20px",
             borderTop: "1px solid #374151",
+            flexShrink: 0,
+            background: "#111827",
           }}
         >
           <button
             onClick={logout}
             style={{
+              width: "100%",
               background: "transparent",
               border: "none",
               color: "#EF4444",
+              fontSize: 16,
               fontWeight: 700,
-              fontSize: 15,
               cursor: "pointer",
-              padding: 0,
+              textAlign: "left",
+              padding: "10px 0",
             }}
           >
             🚪 Logout
@@ -272,20 +278,52 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* MOBILE CSS */}
-      <style jsx>{`
+      {/* RESPONSIVE SIDEBAR CSS */}
+      <style jsx global>{`
+        .crm-main {
+          margin-left: 270px;
+          width: calc(100% - 270px);
+        }
+
+        .crm-sidebar {
+          transform: translateX(0);
+          transition: transform 0.25s ease;
+        }
+
         @media (max-width: 768px) {
+          .crm-main {
+            margin-left: 0;
+            width: 100%;
+          }
+
           .mobile-menu-button {
-            display: block !important;
+            display: flex !important;
           }
 
-          aside {
-            left: -270px !important;
-            transition: left 0.3s ease;
+          .crm-sidebar {
+            transform: translateX(-100%);
+            width: 280px !important;
           }
 
-          aside.sidebar-open {
-            left: 0 !important;
+          .crm-sidebar.sidebar-open {
+            transform: translateX(0);
+          }
+        }
+
+        @media (min-width: 769px) {
+          .mobile-sidebar-overlay {
+            display: none !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          header {
+            padding-left: 75px !important;
+            padding-right: 16px !important;
+          }
+
+          main {
+            padding: 18px !important;
           }
         }
       `}</style>
