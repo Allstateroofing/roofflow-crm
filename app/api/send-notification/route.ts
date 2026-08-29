@@ -4,7 +4,10 @@ import { Resend } from "resend";
 const apiKey = process.env.RESEND_API_KEY;
 
 console.log("RESEND KEY EXISTS:", !!apiKey);
-console.log("RESEND KEY PREFIX:", apiKey ? apiKey.substring(0, 3) : "NONE");
+console.log(
+  "RESEND KEY PREFIX:",
+  apiKey ? apiKey.substring(0, 3) : "NONE"
+);
 
 const resend = new Resend(apiKey);
 
@@ -14,7 +17,10 @@ export async function POST(req: Request) {
 
     console.log("SEND NOTIFICATION");
     console.log("TO:", to);
-    console.log("HAS RESEND KEY:", !!process.env.RESEND_API_KEY);
+    console.log(
+      "HAS RESEND KEY:",
+      !!process.env.RESEND_API_KEY
+    );
 
     if (!to || !subject || !message) {
       return NextResponse.json(
