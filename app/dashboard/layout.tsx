@@ -37,8 +37,9 @@ export default function DashboardLayout({
   function roleTitle() {
     if (profile?.role === "admin") return "Administrator";
     if (profile?.role === "secretary") return "Office";
-    if (profile?.role === "salesman")
+    if (profile?.role === "salesman") {
       return profile?.full_name || "Salesman";
+    }
     if (profile?.role === "worker") return "Worker";
 
     return "User";
@@ -57,16 +58,20 @@ export default function DashboardLayout({
     <div
       style={{
         minHeight: "100vh",
-        background: "#f8fafc",
+        background: "#F8FAFC",
         fontFamily: "Inter, Arial, sans-serif",
       }}
     >
       <Sidebar />
 
+      {/* MAIN AREA */}
       <div
-        className="crm-main"
+        className="dashboard-main"
         style={{
+          marginLeft: 270,
           minHeight: "100vh",
+          width: "calc(100% - 270px)",
+          boxSizing: "border-box",
         }}
       >
         {/* TOP BAR */}
@@ -76,10 +81,11 @@ export default function DashboardLayout({
             display: "flex",
             justifyContent: "flex-end",
             alignItems: "center",
-            background: "#ffffff",
-            borderBottom: "1px solid #e5e7eb",
+            background: "#FFFFFF",
+            borderBottom: "1px solid #E5E7EB",
             padding: "0 30px",
             gap: 12,
+            boxSizing: "border-box",
           }}
         >
           <div
@@ -114,7 +120,7 @@ export default function DashboardLayout({
             <span
               style={{
                 fontSize: 12,
-                color: "#6b7280",
+                color: "#6B7280",
               }}
             >
               {roleAccount()}
@@ -133,6 +139,15 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .dashboard-main {
+            margin-left: 0 !important;
+            width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
