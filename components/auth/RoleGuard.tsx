@@ -46,7 +46,7 @@ user
 
 if(!user){
 
-router.push("/login");
+router.push("/auth/login");
 return;
 
 }
@@ -72,7 +72,7 @@ return;
 
 if(!data.active){
 
-router.push("/login");
+router.push("/auth/login");
 return;
 
 }

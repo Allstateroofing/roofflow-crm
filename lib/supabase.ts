@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -11,7 +11,11 @@ if (!supabaseKey) {
   throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY is missing");
 }
 
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseKey
-);
+/**
+ * Klienti i browser-it.
+ *
+ * `createBrowserClient` e ruan sesionin ne COOKIES, jo ne localStorage.
+ * Kjo eshte arsyeja pse serveri (proxy.ts dhe route handler-at) mund ta
+ * lexoje dhe ta verifikoje kush eshte i loguar.
+ */
+export const supabase = createBrowserClient(supabaseUrl, supabaseKey);

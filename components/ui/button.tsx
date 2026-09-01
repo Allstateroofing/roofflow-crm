@@ -44,12 +44,21 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  render,
+  nativeButton,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // Kur `render` jep nje element tjeter (p.sh. nje <Link>, qe del si <a>),
+  // Base UI pret ende nje <button> vendas dhe ankohet ne konsole.
+  // Ky eshte perdorimi i sakte per lidhjet, ndaj e heqim pritjen vetem atje.
+  const isNative = nativeButton ?? render === undefined
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      render={render}
+      nativeButton={isNative}
       {...props}
     />
   )

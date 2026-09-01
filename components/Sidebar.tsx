@@ -4,24 +4,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRole } from "@/lib/useRole";
+import { navFor } from "@/lib/permissions";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
-  const menu = [
-    ["🏠", "Dashboard", "/dashboard"],
-    ["🔎", "Search", "/dashboard/search"],
-    ["👥", "Clients", "/dashboard/clients"],
-    ["📑", "Estimates", "/dashboard/estimates"],
-    ["🧾", "Invoices", "/dashboard/invoices"],
-    ["🏗️", "Jobs", "/dashboard/jobs"],
-    ["💳", "Payments", "/dashboard/payments"],
-    ["📊", "Reports", "/dashboard/reports"],
-    ["👨‍💼", "Salesmen", "/dashboard/salesmen"],
-    ["👤", "Users", "/dashboard/users"],
-  ];
+  const { role, loading } = useRole();
+
+  // Menuja filtrohet sipas rolit (SPEC §24). Fshehja ketu eshte vetem
+  // rehati — faqet vete mbrohen nga RLS dhe nga RoleGuard.
+  const menu = navFor(role);
 
   async function logout() {
     await supabase.auth.signOut();
@@ -76,10 +71,16 @@ export default function Sidebar() {
 
         {/* MENU */}
         <nav className="sidebar-menu">
+          {loading && (
+            <div className="sidebar-skeleton" aria-hidden>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="sidebar-skeleton-row" />
+              ))}
+            </div>
+          )}
+
           {menu.map((item) => {
-            const icon = item[0];
-            const name = item[1];
-            const href = item[2];
+            const { icon, label: name, href } = item;
 
             const active =
               pathname === href ||
@@ -197,6 +198,28 @@ export default function Sidebar() {
           min-width: 28px;
           text-align: center;
           font-size: 19px;
+        }
+
+        .sidebar-skeleton {
+          padding: 0 5px;
+        }
+
+        .sidebar-skeleton-row {
+          height: 52px;
+          margin-bottom: 8px;
+          border-radius: 12px;
+          background: #1f2937;
+          opacity: .5;
+          animation: sidebarPulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes sidebarPulse {
+          0%, 100% { opacity: .35; }
+          50%      { opacity: .6; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .sidebar-skeleton-row { animation: none; }
         }
 
         .sidebar-logout {

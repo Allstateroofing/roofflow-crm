@@ -42,6 +42,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
 
+  --color-destructive: var(--destructive);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -68,6 +70,9 @@
 
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
+
+  /* E kuqja e veprimeve shkaterruese dhe e gabimeve te formave. */
+  --destructive: oklch(0.577 0.245 27.325);
 
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -97,6 +102,9 @@
 
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
+
+  /* Me e ndritshme mbi sfond te erret, qe te mbetet e lexueshme. */
+  --destructive: oklch(0.704 0.191 22.216);
 
   --border: oklch(1 0 0 / 10%);
 }

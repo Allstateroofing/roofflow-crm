@@ -1,42 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import { supabase } from "@/lib/supabase";
+import { SessionProvider, useSession } from "@/components/SessionProvider";
+import { canReach } from "@/lib/permissions";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [profile, setProfile] = useState<any>(null);
+  return (
+    <SessionProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </SessionProvider>
+  );
+}
 
+function DashboardShell({ children }: { children: React.ReactNode }) {
+  const { profile } = useSession();
+
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Nje roje e vetme per te gjitha faqet — perndryshe adresa e shkruar me dore
+  // hap faqe qe menyja i fsheh (p.sh. sekretarja te /dashboard/reports).
   useEffect(() => {
-    loadProfile();
-  }, []);
-
-  async function loadProfile() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    console.log("PROFILE:", data);
-    console.log("PROFILE ERROR:", error);
-
-    setProfile(data);
-  }
+    if (profile && !canReach(profile.role, pathname)) {
+      router.replace("/dashboard");
+    }
+  }, [profile, pathname, router]);
 
   function roleTitle() {
     if (profile?.role === "admin") return "Administrator";
     if (profile?.role === "secretary") return "Office";
+    if (profile?.role === "manager") return "Manager";
     if (profile?.role === "salesman") {
       return profile?.full_name || "Salesman";
     }
@@ -48,11 +47,14 @@ export default function DashboardLayout({
   function roleAccount() {
     if (profile?.role === "admin") return "Admin Account";
     if (profile?.role === "secretary") return "Secretary Account";
+    if (profile?.role === "manager") return "Manager Account";
     if (profile?.role === "salesman") return "Salesman Account";
     if (profile?.role === "worker") return "Worker Account";
 
     return "";
   }
+
+  const allowed = profile ? canReach(profile.role, pathname) : false;
 
   return (
     <div
@@ -76,6 +78,7 @@ export default function DashboardLayout({
       >
         {/* TOP BAR */}
         <header
+          className="dashboard-topbar"
           style={{
             height: 70,
             display: "flex",
@@ -130,21 +133,38 @@ export default function DashboardLayout({
 
         {/* PAGE CONTENT */}
         <main
+          className="dashboard-content"
           style={{
-            padding: 30,
             width: "100%",
             boxSizing: "border-box",
           }}
         >
-          {children}
+          {/* Mos e nxirr permbajtjen para se te dihet roli — perndryshe faqja
+              e ndaluar duket per nje çast para se roja ta kthej mbrapsht. */}
+          {allowed ? children : null}
         </main>
       </div>
 
       <style>{`
+        .dashboard-content {
+          padding: 30px;
+        }
+
         @media (max-width: 768px) {
           .dashboard-main {
             margin-left: 0 !important;
             width: 100% !important;
+          }
+
+          /* Sidebar-i ka tashme nje header fiks ne mobile — mos e dyfisho. */
+          .dashboard-topbar {
+            display: none !important;
+          }
+
+          /* Header-i mobil eshte fixed (64px) — lere hapesire ose permbajtja fshihet pas tij. */
+          .dashboard-content {
+            padding: 16px;
+            padding-top: 80px;
           }
         }
       `}</style>
