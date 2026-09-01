@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Kopjet rezerve te databazes — permbajne te dhena reale klientesh.
+/supabase/backups/

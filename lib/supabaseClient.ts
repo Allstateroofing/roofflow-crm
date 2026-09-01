@@ -1,7 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-
-
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+/**
+ * I mbetur per pajtueshmeri: disa faqe importojne prej ketu.
+ * Ka nje klient te vetem, te perkufizuar te lib/supabase.ts.
+ */
+export { supabase } from "./supabase";

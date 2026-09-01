@@ -29,7 +29,6 @@ const {data,error}=await supabase
 
 if(error){
 
-console.log(error);
 
 return null;
 

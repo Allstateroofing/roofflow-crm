@@ -1,13 +1,14 @@
 "use client";
 
-import {useState} from "react";
-import {useRouter} from "next/navigation";
+import {Suspense, useState} from "react";
+import {useRouter, useSearchParams} from "next/navigation";
 import {supabase} from "@/lib/supabase";
 
 
-export default function LoginPage(){
+function LoginForm(){
 
 const router = useRouter();
+const searchParams = useSearchParams();
 
 const [email,setEmail]=useState("");
 const [password,setPassword]=useState("");
@@ -18,7 +19,6 @@ const [loading,setLoading]=useState(false);
 async function login(){
 
 
-console.log("LOGIN BUTTON CLICKED");
 
 
 if(!email || !password){
@@ -45,8 +45,6 @@ password:password
 
 
 
-console.log("AUTH DATA:",data);
-console.log("AUTH ERROR:",error);
 
 
 
@@ -86,8 +84,6 @@ const {data:profile,error:profileError}=await supabase
 
 
 
-console.log("PROFILE:",profile);
-console.log("PROFILE ERROR:",profileError);
 
 
 
@@ -103,7 +99,7 @@ return;
 
 
 
-router.replace("/dashboard");
+router.replace(searchParams.get("next") || "/dashboard");
 
 
 
@@ -111,7 +107,6 @@ router.replace("/dashboard");
 
 catch(err:any){
 
-console.log(err);
 
 alert(err.message || "Login error");
 
@@ -393,5 +388,15 @@ Secure access for All State Roofing users
 
 
 )
+
+}
+
+export default function LoginPage(){
+
+return (
+<Suspense fallback={null}>
+<LoginForm/>
+</Suspense>
+);
 
 }

@@ -1,33 +1,49 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { MapPin } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { mapsUrl } from "@/lib/format";
+import {
+  JOB_STATUSES,
+  JOB_TYPES,
+  REASONS_FOR_CALL,
+  TIME_WINDOWS,
+} from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Field,
+  FormActions,
+  FormGrid,
+  FormPage,
+  NativeSelect,
+} from "@/components/ui/form-shell";
 
 function NewJobContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const clientId = searchParams.get("client");
 
   const [client, setClient] = useState<any>(null);
-  const [salesmen, setSalesmen] = useState<any[]>([]);
-  const [salesman, setSalesman] = useState("");
+
   const [status, setStatus] = useState("new");
+  const [reason, setReason] = useState("");
+  const [jobType, setJobType] = useState("");
   const [price, setPrice] = useState("");
   const [date, setDate] = useState("");
+  const [timeMode, setTimeMode] = useState<"window" | "custom">("window");
+  const [timeWindow, setTimeWindow] = useState("9-11");
+  const [customTime, setCustomTime] = useState("");
   const [notes, setNotes] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (clientId) {
-      loadClient();
-    }
-
-    loadSalesmen();
-  }, [clientId]);
-
-  async function loadClient() {
+  const loadClient = useCallback(async () => {
     if (!clientId) return;
 
     const { data, error } = await supabase
@@ -37,361 +53,269 @@ function NewJobContent() {
       .single();
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
 
     setClient(data);
-  }
+  }, [clientId]);
 
-  async function loadSalesmen() {
-    const { data, error } = await supabase
-      .from("salesmen")
-      .select("id, name")
-      .order("name");
-
-    if (error) {
-      console.log(error);
-      return;
-    }
-
-    setSalesmen(data || []);
-  }
+  useEffect(() => {
+    if (clientId) loadClient();
+  }, [clientId, loadClient]);
 
   async function saveJob() {
     if (!client) {
-      alert("Client not loaded");
+      toast.error("Client not loaded");
       return;
     }
 
-    if (!price) {
-      alert("Please enter a job price");
-      return;
-    }
+    const next: Record<string, string> = {};
+    if (!reason) next.reason = "Pick why they called";
+    if (price && Number(price) < 0) next.price = "Price cannot be negative";
+    if (timeMode === "custom" && date && !customTime)
+      next.time = "Enter the time, or switch to a window";
+
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
 
     setLoading(true);
 
+    // Databaza lejon ose interval ose ore te lire, kurre te dyja.
     const { error } = await supabase.from("jobs").insert({
       client_id: client.id,
-      salesman_id: salesman || null,
-      status: status,
-      total_price: Number(price),
+      status,
+      reason_for_call: reason,
+      job_type: jobType || null,
+      total_price: price ? Number(price) : 0,
       scheduled_date: date || null,
-      notes: notes,
+      time_window: date && timeMode === "window" ? timeWindow : null,
+      scheduled_time: date && timeMode === "custom" ? customTime : null,
+      notes,
     });
 
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
 
-    alert("Job Created");
-
-    router.push("/dashboard/clients/" + clientId);
+    toast.success("Visit booked");
+    router.push("/dashboard/clients");
   }
 
+  const address = client?.address;
+  const url = mapsUrl(address);
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f5f5f5",
-        padding: "30px",
-      }}
+    <FormPage
+      title="Book a Visit"
+      description="Every call that leads to a visit becomes a job."
+      backHref={clientId ? `/dashboard/clients/${clientId}` : "/dashboard/clients"}
     >
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "30px",
-            fontWeight: 700,
-            marginBottom: "25px",
-            color: "#111827",
-          }}
-        >
-          Create Job
-        </h1>
-
-        {client && (
-          <div
-            style={{
-              background: "#fff",
-              padding: "20px",
-              borderRadius: "15px",
-              marginBottom: "20px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "20px",
-                fontWeight: 700,
-                marginBottom: "15px",
-              }}
-            >
-              Client Information
-            </h2>
-
-            <div
-              style={{
-                display: "grid",
-                gap: "8px",
-              }}
-            >
-              <div>
-                <strong>Name:</strong> {client.name || "-"}
-              </div>
-
-              <div>
-                <strong>Address:</strong> {client.address || "-"}
-              </div>
-
-              <div>
-                <strong>Phone:</strong> {client.phone || "-"}
-              </div>
-
-              <div>
-                <strong>Email:</strong> {client.email || "-"}
-              </div>
+      {client && (
+        <div className="mb-6 rounded-lg border border-border bg-muted/40 p-4">
+          <h2 className="mb-3 text-sm font-semibold">{client.name}</h2>
+          <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">Phone:</dt>
+              <dd className="font-medium">{client.phone || "—"}</dd>
             </div>
-          </div>
-        )}
-
-        {!clientId && (
-          <div
-            style={{
-              background: "#fff",
-              padding: "20px",
-              borderRadius: "15px",
-              marginBottom: "20px",
-              color: "#b91c1c",
-            }}
-          >
-            No client selected.
-          </div>
-        )}
-
-        <div
-          style={{
-            background: "#fff",
-            padding: "25px",
-            borderRadius: "15px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "20px",
-              fontWeight: 700,
-              marginBottom: "20px",
-            }}
-          >
-            Job Details
-          </h2>
-
-          <div
-            style={{
-              display: "grid",
-              gap: "18px",
-            }}
-          >
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "7px",
-                  fontWeight: 600,
-                }}
-              >
-                Salesman
-              </label>
-
-              <select
-                value={salesman}
-                onChange={(e) => setSalesman(e.target.value)}
-                style={{
-                  padding: "10px",
-                  width: "100%",
-                  maxWidth: "400px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  background: "#fff",
-                }}
-              >
-                <option value="">Select Salesman</option>
-
-                {salesmen.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">Email:</dt>
+              <dd className="font-medium">{client.email || "—"}</dd>
             </div>
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "7px",
-                  fontWeight: 600,
-                }}
-              >
-                Status
-              </label>
-
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                style={{
-                  padding: "10px",
-                  width: "100%",
-                  maxWidth: "400px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  background: "#fff",
-                }}
-              >
-                <option value="new">New</option>
-                <option value="inspection">Inspection</option>
-                <option value="estimate_sent">Estimate Sent</option>
-                <option value="approved">Approved</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="in_progress">In Progress</option>
-                <option value="done">Done</option>
-              </select>
+            <div className="flex gap-2 sm:col-span-2">
+              <dt className="text-muted-foreground">Address:</dt>
+              <dd className="font-medium">
+                {url ? (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                  >
+                    <MapPin className="size-3.5" />
+                    {address}
+                  </a>
+                ) : (
+                  address || "—"
+                )}
+              </dd>
             </div>
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "7px",
-                  fontWeight: 600,
-                }}
-              >
-                Job Price
-              </label>
-
-              <input
-                type="number"
-                placeholder="Job Price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                min="0"
-                step="0.01"
-                style={{
-                  padding: "10px",
-                  width: "100%",
-                  maxWidth: "400px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                }}
-              />
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "7px",
-                  fontWeight: 600,
-                }}
-              >
-                Scheduled Date
-              </label>
-
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                style={{
-                  padding: "10px",
-                  width: "100%",
-                  maxWidth: "400px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                }}
-              />
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "7px",
-                  fontWeight: 600,
-                }}
-              >
-                Notes
-              </label>
-
-              <textarea
-                placeholder="Job notes..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={5}
-                style={{
-                  padding: "10px",
-                  width: "100%",
-                  maxWidth: "600px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  resize: "vertical",
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "5px",
-                flexWrap: "wrap",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => router.back()}
-                style={{
-                  padding: "12px 22px",
-                  borderRadius: "8px",
-                  border: "1px solid #d1d5db",
-                  background: "#fff",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={saveJob}
-                disabled={loading || !client}
-                style={{
-                  padding: "12px 22px",
-                  borderRadius: "8px",
-                  border: "none",
-                  background: "#D4AF37",
-                  color: "#111",
-                  cursor:
-                    loading || !client ? "not-allowed" : "pointer",
-                  fontWeight: 700,
-                  opacity: loading || !client ? 0.6 : 1,
-                }}
-              >
-                {loading ? "Creating..." : "Create Job"}
-              </button>
-            </div>
-          </div>
+          </dl>
         </div>
-      </div>
-    </div>
+      )}
+
+      {!clientId && (
+        <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          No client selected. Open this from a client to book their visit.
+        </div>
+      )}
+
+      <FormGrid>
+        <FormGrid cols={2}>
+          <Field
+            label="Reason for call"
+            htmlFor="reason"
+            required
+            error={errors.reason}
+          >
+            <NativeSelect
+              id="reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            >
+              <option value="">Why did they call?</option>
+              {REASONS_FOR_CALL.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+
+          <Field label="Job type" htmlFor="jobType">
+            <NativeSelect
+              id="jobType"
+              value={jobType}
+              onChange={(e) => setJobType(e.target.value)}
+            >
+              <option value="">Not decided yet</option>
+              {JOB_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+        </FormGrid>
+
+        <FormGrid cols={2}>
+          <Field label="Status" htmlFor="status">
+            <NativeSelect
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              {JOB_STATUSES.filter((s) => s.value !== "cancelled").map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+        </FormGrid>
+
+        {/* ---- Takimi ---- */}
+        <div className="rounded-lg border border-border p-4">
+          <h3 className="mb-4 text-sm font-semibold">Appointment</h3>
+
+          <FormGrid>
+            <FormGrid cols={2}>
+              <Field label="Date" htmlFor="date">
+                <Input
+                  id="date"
+                  type="date"
+                  className="h-9"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </Field>
+
+              <Field label="Time" htmlFor="timeMode">
+                <NativeSelect
+                  id="timeMode"
+                  value={timeMode}
+                  onChange={(e) =>
+                    setTimeMode(e.target.value as "window" | "custom")
+                  }
+                >
+                  <option value="window">Standard window</option>
+                  <option value="custom">Exact time</option>
+                </NativeSelect>
+              </Field>
+            </FormGrid>
+
+            {timeMode === "window" ? (
+              <Field label="Window" htmlFor="window">
+                <NativeSelect
+                  id="window"
+                  value={timeWindow}
+                  onChange={(e) => setTimeWindow(e.target.value)}
+                >
+                  {TIME_WINDOWS.map((w) => (
+                    <option key={w.value} value={w.value}>
+                      {w.label}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
+            ) : (
+              <Field
+                label="Exact time"
+                htmlFor="customTime"
+                error={errors.time}
+                hint="For appointments that don't fit a two-hour window."
+                className="sm:max-w-[200px]"
+              >
+                <Input
+                  id="customTime"
+                  type="time"
+                  className="h-9"
+                  value={customTime}
+                  onChange={(e) => setCustomTime(e.target.value)}
+                />
+              </Field>
+            )}
+          </FormGrid>
+        </div>
+
+        <Field
+          label="Job Price"
+          htmlFor="price"
+          error={errors.price}
+          hint="Leave empty until the estimate is done."
+          className="sm:max-w-[220px]"
+        >
+          <div className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
+              $
+            </span>
+            <Input
+              id="price"
+              type="number"
+              min="0"
+              step="0.01"
+              className="h-9 pl-7"
+              placeholder="0.00"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+          </div>
+        </Field>
+
+        <Field label="Note" htmlFor="notes">
+          <Textarea
+            id="notes"
+            rows={4}
+            placeholder="Water coming through bedroom ceiling. Call 30 minutes before arrival."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </Field>
+      </FormGrid>
+
+      <FormActions>
+        <Button variant="outline" size="lg" onClick={() => router.back()}>
+          Cancel
+        </Button>
+        <Button size="lg" onClick={saveJob} disabled={loading || !client}>
+          {loading ? "Booking…" : "Book Visit"}
+        </Button>
+      </FormActions>
+    </FormPage>
   );
 }
 
@@ -399,14 +323,7 @@ export default function NewJobPage() {
   return (
     <Suspense
       fallback={
-        <div
-          style={{
-            padding: "30px",
-            fontSize: "18px",
-          }}
-        >
-          Loading...
-        </div>
+        <div className="p-8 text-sm text-muted-foreground">Loading…</div>
       }
     >
       <NewJobContent />

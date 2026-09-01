@@ -1,360 +1,256 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import toast from "react-hot-toast";
+import { Search as SearchIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { money, one, shortDate, timeLabel } from "@/lib/format";
+import { can } from "@/lib/permissions";
+import { useRole } from "@/lib/useRole";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { EmptyState, PageHeader, StatusBadge } from "@/components/ui/list-page";
 
-
-export default function SearchPage(){
-
-const [search,setSearch]=useState("");
-const [results,setResults]=useState<any[]>([]);
-
-
-
-async function runSearch(){
-
-if(!search.trim()){
-setResults([]);
-return;
-}
-
-
-let data:any[]=[];
-
-
-// GET CLIENTS
-
-const {data:clients,error:clientError}=await supabase
-.from("clients")
-.select("*");
-
-
-// GET SALESMEN
-
-const {data:salesmen,error:salesmanError}=await supabase
-.from("salesmen")
-.select("*");
-
-
-
-console.log("CLIENTS:",clients);
-console.log("SALESMEN:",salesmen);
-console.log("CLIENT ERROR:",clientError);
-console.log("SALESMAN ERROR:",salesmanError);
-
-
-
-if(clients){
-
-
-const filteredClients = clients.filter((c:any)=>{
-
-
-const salesman = salesmen?.find(
-(s:any)=>s.id === c.salesman_id
-);
-
-
-return (
-
-c.name?.toLowerCase()
-.includes(search.toLowerCase()) ||
-
-c.phone?.includes(search) ||
-
-c.email?.toLowerCase()
-.includes(search.toLowerCase()) ||
-
-c.address?.toLowerCase()
-.includes(search.toLowerCase()) ||
-
-c.zip?.includes(search) ||
-
-salesman?.name?.toLowerCase()
-.includes(search.toLowerCase())
-
-);
-
-
-});
-
-
-
-data.push(
-
-...filteredClients.map((c:any)=>{
-
-
-const salesman = salesmen?.find(
-(s:any)=>s.id === c.salesman_id
-);
-
-
-return {
-
-type:"Client",
-
-name:c.name,
-
-info:
-`
-Phone: ${c.phone || ""}
-Email: ${c.email || ""}
-Address: ${c.address || ""}
-Zip: ${c.zip || ""}
-Salesman: ${salesman?.name || ""}
-`
-
+type Hit = {
+  kind: "Client" | "Job" | "Salesman";
+  href: string;
+  title: string;
+  subtitle: string;
+  meta?: string;
+  status?: string;
 };
 
-
-})
-
-);
-
-
+/** Kthen termin ne nje filter PostgREST `or` — pa presje qe e prishin sintaksen. */
+function orFilter(term: string, columns: string[]) {
+  const safe = term.replace(/[,()]/g, " ").trim();
+  return columns.map((c) => `${c}.ilike.%${safe}%`).join(",");
 }
 
+function SearchContent() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const initial = params.get("q") || "";
 
+  const { role } = useRole();
+  const seePrice = can(role, "seeJobPrice");
 
+  const [term, setTerm] = useState(initial);
+  const [hits, setHits] = useState<Hit[] | null>(null);
+  const [loading, setLoading] = useState(false);
 
+  const run = useCallback(
+    async (raw: string) => {
+      const q = raw.trim();
 
-// SALESMAN SEARCH
+      if (!q) {
+        setHits(null);
+        return;
+      }
 
+      setLoading(true);
 
-if(salesmen){
+      // Filtrimi behet ne databaze — nuk terheqim tabelat e plota ne shfletues.
+      const JOB_COLS =
+        "id, status, notes, reason_for_call, job_type, total_price, scheduled_date, time_window, scheduled_time";
+      const like = `%${q.replace(/[,()]/g, " ").trim()}%`;
 
+      const [clients, jobs, jobsByClient, jobsBySalesman, salesmen] =
+        await Promise.all([
+          supabase
+            .from("clients")
+            .select("id, name, phone, email, address, zip_code, salesmen(name)")
+            .or(orFilter(q, ["name", "phone", "email", "address", "zip_code"]))
+            .limit(25),
+          supabase
+            .from("jobs")
+            .select(`${JOB_COLS}, clients(name), salesmen(name)`)
+            .or(orFilter(q, ["status", "notes", "reason_for_call", "job_type"]))
+            .limit(25),
+          // Emri i klientit rri te tabela tjeter — duhet inner join per ta filtruar.
+          supabase
+            .from("jobs")
+            .select(`${JOB_COLS}, clients!inner(name), salesmen(name)`)
+            .ilike("clients.name", like)
+            .limit(25),
+          supabase
+            .from("jobs")
+            .select(`${JOB_COLS}, clients(name), salesmen!inner(name)`)
+            .ilike("salesmen.name", like)
+            .limit(25),
+          supabase
+            .from("salesmen")
+            .select("id, name, phone, email, active")
+            .or(orFilter(q, ["name", "phone", "email"]))
+            .limit(25),
+        ]);
 
-const filteredSalesmen=salesmen.filter((s:any)=>{
+      setLoading(false);
 
+      const failed = [clients, jobs, jobsByClient, jobsBySalesman, salesmen].find(
+        (r) => r.error
+      );
+      if (failed?.error) {
+        toast.error(failed.error.message);
+        return;
+      }
 
-return (
+      // Nje pune mund te dale nga disa kerkime — mbaje vetem njehere.
+      const allJobs = [
+        ...(jobs.data || []),
+        ...(jobsByClient.data || []),
+        ...(jobsBySalesman.data || []),
+      ].filter(
+        (j, i, arr) => arr.findIndex((other) => other.id === j.id) === i
+      );
 
-s.name?.toLowerCase()
-.includes(search.toLowerCase()) ||
+      const out: Hit[] = [];
 
-s.phone?.includes(search) ||
+      for (const c of clients.data || []) {
+        out.push({
+          kind: "Client",
+          href: `/dashboard/clients/${c.id}`,
+          title: c.name || "Unnamed client",
+          subtitle: [c.phone, c.email].filter(Boolean).join(" · ") || "No contact",
+          meta:
+            [c.address, c.zip_code].filter(Boolean).join(", ") || undefined,
+          status: one<any>(c.salesmen)?.name,
+        });
+      }
 
-s.email?.toLowerCase()
-.includes(search.toLowerCase())
+      for (const j of allJobs) {
+        const when = j.scheduled_date
+          ? `${shortDate(j.scheduled_date)} · ${timeLabel(j)}`
+          : "Not scheduled";
 
-);
+        out.push({
+          kind: "Job",
+          href: `/dashboard/jobs/${j.id}`,
+          title: one<any>(j.clients)?.name || "Job",
+          subtitle: [j.reason_for_call, j.job_type].filter(Boolean).join(" · ") || when,
+          meta: [
+            when,
+            one<any>(j.salesmen)?.name,
+            seePrice && j.total_price ? money(j.total_price) : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          status: j.status,
+        });
+      }
 
+      for (const s of salesmen.data || []) {
+        out.push({
+          kind: "Salesman",
+          href: "/dashboard/salesmen",
+          title: s.name || "Salesman",
+          subtitle: [s.phone, s.email].filter(Boolean).join(" · ") || "No contact",
+          status: s.active ? "active" : "inactive",
+        });
+      }
 
-});
+      setHits(out);
+    },
+    [seePrice]
+  );
 
+  // Nje kerkim direkt nga URL-ja, qe linket te jene te ndashme.
+  useEffect(() => {
+    if (initial) run(initial);
+  }, [initial, run]);
 
+  function submit() {
+    const q = term.trim();
+    router.replace(q ? `/dashboard/search?q=${encodeURIComponent(q)}` : "/dashboard/search");
+    run(q);
+  }
 
-data.push(
+  return (
+    <div className="mx-auto w-full max-w-3xl">
+      <PageHeader
+        title="Search"
+        description="Clients, jobs and salesmen — everything in one place."
+      />
 
-...filteredSalesmen.map((s:any)=>({
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            autoFocus
+            className="h-10 pl-9"
+            placeholder="Name, phone, address, zip, status…"
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submit();
+            }}
+          />
+        </div>
+        <Button size="lg" onClick={submit} disabled={loading}>
+          {loading ? "Searching…" : "Search"}
+        </Button>
+      </div>
 
-type:"Salesman",
+      <div className="mt-6">
+        {hits === null ? (
+          <EmptyState
+            title="Type what you remember"
+            hint="A phone number, a street, a client's name — any part of it works."
+          />
+        ) : hits.length === 0 ? (
+          <EmptyState
+            title={`Nothing matches “${term.trim()}”`}
+            hint="Try a shorter piece of the name or number."
+          />
+        ) : (
+          <>
+            <p className="mb-3 text-sm text-muted-foreground">
+              {hits.length} {hits.length === 1 ? "result" : "results"}
+            </p>
 
-name:s.name,
+            <ul className="space-y-2">
+              {hits.map((h, i) => (
+                <li key={`${h.kind}-${h.href}-${i}`}>
+                  <Link
+                    href={h.href}
+                    className="flex items-start justify-between gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+                        {h.kind}
+                      </div>
+                      <div className="mt-0.5 truncate text-sm font-medium">
+                        {h.title}
+                      </div>
+                      <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {h.subtitle}
+                      </div>
+                      {h.meta && (
+                        <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                          {h.meta}
+                        </div>
+                      )}
+                    </div>
 
-info:
-`
-Phone: ${s.phone || ""}
-Email: ${s.email || ""}
-Commission: ${s.commission_percent || ""}%
-`
-
-}))
-
-
-);
-
-
+                    {h.status && <StatusBadge value={h.status} />}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
-
-
-
-
-// JOBS
-
-
-const {data:jobs}=await supabase
-.from("jobs")
-.select("*");
-
-
-
-if(jobs){
-
-
-const filteredJobs=jobs.filter((j:any)=>{
-
-
-return (
-
-j.status?.toLowerCase()
-.includes(search.toLowerCase()) ||
-
-j.notes?.toLowerCase()
-.includes(search.toLowerCase())
-
-);
-
-
-});
-
-
-
-data.push(
-
-...filteredJobs.map((j:any)=>({
-
-type:"Job",
-
-name:"Job",
-
-info:
-`
-Status: ${j.status || ""}
-Notes: ${j.notes || ""}
-`
-
-}))
-
-
-);
-
-
-}
-
-
-
-setResults(data);
-
-
-}
-
-
-
-
-return (
-
-<div>
-
-
-<h1
-style={{
-fontSize:28,
-fontWeight:800,
-marginBottom:20
-}}
->
-Global Search
-</h1>
-
-
-
-<input
-
-value={search}
-
-onChange={(e)=>setSearch(e.target.value)}
-
-onKeyDown={(e)=>{
-
-if(e.key==="Enter")
-runSearch();
-
-}}
-
-placeholder="Search name, phone, zip, salesman, job..."
-
-style={{
-
-width:"100%",
-padding:15,
-border:"1px solid #ddd",
-borderRadius:10,
-fontSize:16
-
-}}
-
-/>
-
-
-
-<button
-
-onClick={runSearch}
-
-style={{
-
-marginTop:15,
-padding:"12px 25px",
-background:"#D4AF37",
-border:"none",
-borderRadius:10,
-fontWeight:700
-
-}}
-
->
-
-Search
-
-</button>
-
-
-
-
-<div style={{marginTop:30}}>
-
-
-{
-results.map((r,i)=>(
-
-
-<div
-
-key={i}
-
-style={{
-
-padding:20,
-background:"#fff",
-borderRadius:12,
-marginBottom:10,
-border:"1px solid #ddd"
-
-}}
-
->
-
-
-<b>{r.type}</b>
-
-<h3>{r.name}</h3>
-
-
-<p style={{whiteSpace:"pre-line"}}>
-
-{r.info}
-
-</p>
-
-
-</div>
-
-
-))
-
-}
-
-
-
-</div>
-
-
-</div>
-
-);
-
-
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={<div className="p-8 text-sm text-muted-foreground">Loading…</div>}
+    >
+      <SearchContent />
+    </Suspense>
+  );
 }
